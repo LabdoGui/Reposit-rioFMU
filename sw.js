@@ -1,8 +1,8 @@
 /*
- * O jogo Tycoon Empire, que ficava no endereço principal, agora está em /tycoon/
- * (com o próprio service worker). Este arquivo substitui o service worker antigo
- * da raiz: quando o navegador o encontra, ele se desinstala e recarrega as abas,
- * para que o endereço principal deixe de abrir a cópia guardada do jogo.
+ * Service worker de limpeza: o endereço principal deste site já teve um app com
+ * service worker próprio. Quando o navegador encontra este arquivo, ele se
+ * desinstala e recarrega as abas, para que o endereço principal deixe de abrir
+ * uma cópia antiga guardada no aparelho.
  */
 self.addEventListener('install', () => self.skipWaiting());
 
