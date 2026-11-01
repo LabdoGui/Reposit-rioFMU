@@ -11,12 +11,34 @@ O **SangueConecta** é uma plataforma web responsiva (PWA) de apoio à doação 
 
 Projeto **acadêmico**, desenvolvido com **dados fictícios**. Não substitui o sistema de um hemocentro nem decide quem pode doar.
 
+## Sobre o projeto
+
+Muita gente quer doar sangue, mas desiste no caminho: as informações sobre quem pode doar estão espalhadas, nem sempre é fácil achar a unidade e o horário, e quem doa uma vez raramente recebe um lembrete ou um agradecimento que o traga de volta. O **SangueConecta** reúne essa jornada em um só lugar: orienta a pessoa antes da doação, facilita o agendamento, acompanha o histórico e reconhece quem volta a doar. Para os hemocentros, organiza a agenda, o atendimento e o estoque.
+
+O projeto foi desenvolvido como **Trabalho de Conclusão de Semestre** do curso de **Sistemas de Informação** do **Centro Universitário FMU** (São Paulo, 2026), alinhado ao **ODS 3 — Saúde e Bem-Estar** da ONU.
+
+- **Equipe:** Eduarda Rodrigues Mardegan, Guilherme dos Santos Gonçalves, Joao Pedro Pereira Brandao, Lucas Pereira Dorado da Silva, Murilo Santos Da Silva e Paulo Henrique Noronha Oliveira.
+- **Orientador:** Gerson Lourenco Gazola.
+
+### Documento do projeto
+
+O documento consolidado do trabalho está em **[docs/Projeto_SangueConecta_Documento_Consolidado_Revisado.docx](docs/Projeto_SangueConecta_Documento_Consolidado_Revisado.docx)** (Word; no GitHub, use *Download raw file* para abrir). Ele reúne:
+
+- resumo e *abstract*;
+- descrição do problema, público afetado e recorte legal de benefícios ao doador;
+- fontes públicas de referência e integrações futuras;
+- proposta de solução: funcionalidades, tecnologias, microsserviços e cuidados de implementação;
+- identidade visual (logotipo, cores, tipografia e diretrizes de uso);
+- pitch, diferenciais, conclusão e referências.
+
 ---
 
 ## Sumário
 
+- [Sobre o projeto](#sobre-o-projeto)
 - [Objetivo](#objetivo)
 - [ODS 3 — Saúde e Bem-Estar](#ods-3--saúde-e-bem-estar)
+- [Reconhecimento dos doadores (premiações)](#reconhecimento-dos-doadores-premiações)
 - [Status do desenvolvimento](#status-do-desenvolvimento)
 - [Arquitetura](#arquitetura)
 - [Tecnologias](#tecnologias)
@@ -26,7 +48,7 @@ Projeto **acadêmico**, desenvolvido com **dados fictícios**. Não substitui o 
 - [Configuração](#configuração)
 - [Banco de dados](#banco-de-dados)
 - [Contas de demonstração](#contas-de-demonstração)
-- [Documentação da API](#documentação-da-api)
+- [APIs](#apis)
 - [Estrutura do projeto](#estrutura-do-projeto)
 - [LGPD e dados fictícios](#lgpd-e-dados-fictícios)
 - [Documentação do projeto](#documentação-do-projeto)
@@ -48,6 +70,45 @@ O problema, as personas e os requisitos estão detalhados em [docs/01](docs/01-v
 ## ODS 3 — Saúde e Bem-Estar
 
 O projeto se alinha ao **Objetivo de Desenvolvimento Sustentável 3** da ONU: assegurar uma vida saudável e promover o bem-estar para todos. A disponibilidade de sangue depende de doadores regulares; o SangueConecta ataca as barreiras de informação, agendamento e lembrete que fazem a pessoa não voltar a doar. A justificativa completa está em [docs/01](docs/01-visao-geral-problema-ods.md).
+
+## Reconhecimento dos doadores (premiações)
+
+O SangueConecta premia a **participação** com reconhecimento, nunca com dinheiro ou brindes: no Brasil a doação de sangue é voluntária e não remunerada, e a Constituição proíbe qualquer tipo de comercialização do sangue (art. 199, § 4º; ver também a Lei 10.205/2001). Por isso não há prêmio material, e o comparecimento vale o mesmo para quem pôde doar e para quem a triagem pediu para voltar outro dia.
+
+**Pontos.** O doador ganha pontos a cada atendimento finalizado:
+
+| Situação | Pontos |
+|---|---|
+| Primeiro comparecimento | 100 |
+| Cada novo comparecimento | 150 |
+| Bônus por comparecer durante uma campanha | +50 |
+
+**Níveis.** Os pontos acumulados definem o nível do doador:
+
+| Nível | A partir de |
+|---|---|
+| Primeiro Passo | 0 pontos |
+| Doador | 100 pontos |
+| Doador Frequente | 400 pontos |
+| Herói da Comunidade | 700 pontos |
+
+**Conquistas.** Medalhas desbloqueadas pelas doações concluídas, com a data em que foram conquistadas:
+
+| Conquista | Como desbloquear |
+|---|---|
+| Primeira Doação | Concluir a primeira doação |
+| Doador Recorrente | Voltar e concluir a segunda doação |
+| 3 Doações | Concluir três doações |
+| 5 Doações | Concluir cinco doações |
+| Campanha Especial | Doar durante uma campanha, quando o estoque mais precisa |
+
+**Ranking.** Opcional: só aparece quem escolhe participar, com um apelido no lugar do nome. O administrador pode desligar o ranking.
+
+**Horas complementares.** O estudante vinculado a uma instituição de ensino parceira recebe um pedido de horas a cada doação concluída (a quantidade é definida pela instituição). O pedido nasce pendente e só vale depois de aprovado pela instituição (no protótipo, o administrador faz essa aprovação); o sistema nunca concede horas sozinho.
+
+**Comprovantes e benefícios legais.** O doador gera em PDF a declaração de comparecimento e a declaração de doação, cada uma com um código que qualquer pessoa pode conferir na página pública de verificação, que mostra só as iniciais do titular. No protótipo, os comprovantes são acadêmicos; em uso real, a declaração oficial é emitida pelo hemocentro e é ela que garante, por exemplo, a ausência justificada ao trabalho por um dia a cada 12 meses (CLT, art. 473).
+
+Os valores de pontos, as conquistas e as horas por doação são configuráveis pelo administrador. As regras de negócio estão em [docs/03](docs/03-requisitos.md) (RN12, RN13 e RN15) e a implementação em [docs/16](docs/16-plano-de-implementacao.md).
 
 ## Status do desenvolvimento
 
@@ -314,7 +375,28 @@ Também há 70 doadores fictícios (`…@exemplo.test`, mesma senha) com histór
 
 **Jornada completa pelo navegador** (os 22 passos): crie uma conta em *Quero doar*, responda a pré-triagem e agende; saia e entre como `enfermeiro@demo.com`, escolha a data do agendamento na agenda, faça o check-in e abra o atendimento para a triagem e a doação; volte como doador para ver a doação, os pontos, a conquista e gerar a declaração; por fim, entre como `admin@demo.com` para o dashboard e o Banco de Sangue. No ambiente de demonstração o check-in de dias futuros fica liberado (`DEMO_EARLY_CHECK_IN=true`); em uso real ele vale só no dia do agendamento.
 
-## Documentação da API
+## APIs
+
+O SangueConecta é construído sobre uma **API REST** própria: o front-end (e qualquer outro sistema autorizado) conversa com um **API Gateway**, que encaminha cada pedido para um dos seis microsserviços. Todas as rotas públicas ficam em **`/api/v1`**.
+
+| Serviço | Para que serve | Exemplos de rotas |
+|---|---|---|
+| **identity** | Cadastro, login, perfil, consentimentos (LGPD) e usuários | `POST /auth/register` · `POST /auth/login` · `GET /users/me` · `PUT /consents/me` |
+| **scheduling** | Unidades, horários, campanhas, agendamentos e agenda da equipe | `GET /units` · `GET /appointments/availability` · `POST /appointments` · `GET /agenda` |
+| **clinical** | Pré-triagem informativa, triagem da equipe, doações e declarações em PDF | `POST /screenings/pre-check` · `POST /donations` · `POST /documents/donation` · `GET /documents/verify/:code` |
+| **inventory** | Estoque de sangue por tipo e movimentações | `GET /blood-inventory/public` · `POST /blood-inventory/movements` |
+| **engagement** | Pontos, níveis, conquistas, ranking e horas complementares | `GET /gamification/profile` · `GET /achievements` · `GET /gamification/ranking` |
+| **notification** | Central de notificações e lembretes | `GET /notifications` · `PATCH /notifications/read-all` |
+
+**Como funciona por dentro:**
+
+- **Autenticação:** token de acesso JWT (RS256) de curta duração e *refresh token* rotativo em cookie seguro. Cada rota verifica o perfil de quem chama (doador, colaborador, enfermeiro ou administrador).
+- **Comunicação entre serviços:** além das chamadas REST, os serviços trocam **eventos** pelo RabbitMQ (por exemplo, "doação registrada" gera pontos, conquistas e notificação), com *outbox* para nenhum evento se perder.
+- **Demonstração no navegador:** a versão publicada no GitHub Pages simula essas mesmas rotas dentro do próprio navegador, com dados fictícios.
+
+**APIs externas:** o protótipo **não usa APIs de terceiros**; todos os dados são fictícios e gerados pelo próprio projeto. Integrações futuras previstas no documento do projeto: API de Localidades do IBGE (estados e municípios), Portal Brasileiro de Dados Abertos e sistemas de hemocentros parceiros (horários e estoque reais), sempre com autorização institucional.
+
+### Documentação da API
 
 - **Swagger unificado:** <http://localhost:8080/api/docs> (OpenAPI em <http://localhost:8080/api/docs-json>). O gateway reúne a documentação de todos os serviços.
 - **Swagger de cada serviço:** `http://localhost:<porta>/docs` (portas 3001 a 3006, só em `127.0.0.1`).
@@ -387,6 +469,7 @@ O desenho completo da API está em [docs/09](docs/09-api.md) e [docs/16, item 4]
 | 15 | [Roteiro do Checkpoint 1](docs/15-checkpoint-1.md) |
 | 16 | [Plano de implementação](docs/16-plano-de-implementacao.md) (especificação técnica de referência) |
 | — | [Referências verificadas](docs/referencias.md) |
+| — | [Documento consolidado do projeto (Word)](docs/Projeto_SangueConecta_Documento_Consolidado_Revisado.docx) |
 
 Os documentos 01 a 15 formam a proposta do Checkpoint 1 (com stack Spring Boot); o documento 16 registra o que mudou na implementação (NestJS + Prisma, 4 papéis fixos, estoque central). Os documentos usam etiquetas para separar fatos de hipóteses:
 

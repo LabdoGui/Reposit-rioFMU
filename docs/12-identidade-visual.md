@@ -92,13 +92,13 @@ Todas são gratuitas (Google Fonts).
 |---|---|---|---|
 | Doador | Celular | Acolhedor: mais respiro, ilustrações, carmim nas ações | 1. Página pública · 2. Cadastro · 3. Pré-triagem (pergunta + resultado) · 4. Escolha de horário · 5. Confirmação · 6. Painel "Minha jornada" (próxima data, conquistas, histórico) |
 | Profissional | Tablet ou desktop | Funcional: denso, petróleo, foco em velocidade e leitura | 7. Agenda do dia com check-in · 8. Atendimento (triagem simulada) |
-| Admin / gestor | Desktop | Analítico: painéis, números tabulares | 9. **SangueConecta do Estoque** · 10. Configuração da grade semanal |
+| Admin / gestor | Desktop | Analítico: painéis, números tabulares | 9. **Painel do Estoque** · 10. Configuração da grade semanal |
 
-### "SangueConecta do Estoque": a visualização no estilo bolsa de valores
+### "Painel do Estoque": a visualização no estilo bolsa de valores
 
 ```
-┌───────────────────────────────────────────────────────────────────────────┐
-│  SangueConecta do Estoque · Unidade Centro · atualizado 14/11 10:32   DADOS FICTÍCIOS │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ Painel do Estoque · Unidade Centro · atualizado 14/11 10:32  DADOS FICTÍCIOS│
 ├───────────┬───────────┬───────────┬───────────┬───────────┬───────────┬─────┤
 │ O+   82 ▲2│ O-   18 ▼3│ A+   61 ▲1│ A-   22 ▼1│ B+   35 ═0│ B-    9 ▼2│ ... │
 │ ●Adequado │ ▼Crítico  │ ●Adequado │ ◆Atenção  │ ◆Atenção  │ ▼Crítico  │     │
