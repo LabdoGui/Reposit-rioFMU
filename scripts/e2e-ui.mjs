@@ -22,7 +22,7 @@
  * Variáveis: PLAYWRIGHT_CHROMIUM_PATH aponta um Chromium já instalado.
  * Sai com código 1 no primeiro passo que falhar (com captura da tela).
  */
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 
@@ -94,6 +94,20 @@ async function logout() {
   await page.goto(to(`/`));
   // Na demonstração, ir para outro # não recarrega a página (a sessão fica na memória).
   if (DEMO) await page.reload();
+}
+
+/** Clica no botão de planilha e confere que o download é um .xlsx de verdade (zip do Excel). */
+async function downloadSpreadsheet(button) {
+  const [download] = await Promise.all([
+    page.waitForEvent('download', { timeout: 60_000 }),
+    button.click(),
+  ]);
+  const name = download.suggestedFilename();
+  const bytes = readFileSync(await download.path());
+  assert(name.endsWith('.xlsx'), `planilha com nome inesperado: ${name}`);
+  assert(bytes.subarray(0, 2).toString() === 'PK', 'a planilha não é um arquivo .xlsx (zip)');
+  assert(bytes.includes('xl/workbook.xml'), 'a planilha não tem a pasta de trabalho do Excel');
+  return `${name} (${Math.round(bytes.length / 1024)} KB)`;
 }
 
 /** Dia e horário são blocos: o rádio fica oculto e a pessoa clica no bloco. */
@@ -323,7 +337,10 @@ await check('visualizar o dashboard', async () => {
 await check('visualizar o estoque', async () => {
   await page.goto(to(`/admin/estoque`));
   await page.getByRole('heading', { name: 'Níveis por tipo' }).waitFor();
-  return 'níveis por tipo sanguíneo';
+  const file = await downloadSpreadsheet(
+    page.getByRole('button', { name: 'Baixar planilha (Excel)' }),
+  );
+  return `níveis por tipo sanguíneo; planilha ${file}`;
 });
 
 await check('adicionar e remover estoque', async () => {
@@ -352,7 +369,13 @@ await check('visualizar os gráficos', async () => {
   await page.goto(to(`/admin`));
   const charts = page.locator('.recharts-surface');
   await charts.first().waitFor();
-  return `${await charts.count()} gráficos no dashboard`;
+  const count = await charts.count();
+  await page.goto(to(`/admin/relatorios`));
+  await page.getByRole('table', { name: 'Doações no período' }).waitFor();
+  const file = await downloadSpreadsheet(
+    page.getByRole('button', { name: 'Baixar planilha (Excel)' }),
+  );
+  return `${count} gráficos no dashboard; relatório ${file}`;
 });
 
 await check('visualizar o histórico', async () => {
