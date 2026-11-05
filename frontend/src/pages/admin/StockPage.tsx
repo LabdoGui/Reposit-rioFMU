@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { FileSpreadsheet, Plus } from 'lucide-react';
 import {
   BLOOD_TYPE_LABELS,
   MOVEMENT_TYPE_LABELS,
   type MovementView,
   type StockItemView,
 } from '@pulso/contracts';
-import { Alert, Button, PageHeader, QueryState, StatCard } from '@/components/ui';
+import { Alert, Button, PageHeader, ProblemAlert, QueryState, StatCard } from '@/components/ui';
 import { useStockOverview } from '@/features/inventory/api';
 import { MovementDialog } from '@/features/inventory/MovementDialog';
 import { MovementsTable } from '@/features/inventory/MovementsTable';
@@ -24,6 +24,22 @@ export function StockPage() {
   const [movementOpen, setMovementOpen] = useState(false);
   const [adjusting, setAdjusting] = useState<StockItemView | null>(null);
   const [saved, setSaved] = useState<MovementView | null>(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<unknown>(null);
+
+  async function exportWorkbook() {
+    setExporting(true);
+    setExportError(null);
+    try {
+      // A biblioteca de planilhas só é baixada aqui, quando alguém exporta.
+      const { downloadStockWorkbook } = await import('@/features/inventory/stock-workbook');
+      await downloadStockWorkbook();
+    } catch (error) {
+      setExportError(error);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   return (
     <>
@@ -31,11 +47,17 @@ export function StockPage() {
         title="Banco de Sangue"
         description="Estoque central por tipo sanguíneo (dados fictícios). Atualizado a cada movimentação."
         actions={
-          <Button onClick={() => setMovementOpen(true)}>
-            <Plus aria-hidden="true" className="size-4" /> Registrar movimentação
-          </Button>
+          <>
+            <Button variant="outline" loading={exporting} onClick={exportWorkbook}>
+              <FileSpreadsheet aria-hidden="true" className="size-4" /> Baixar planilha (Excel)
+            </Button>
+            <Button onClick={() => setMovementOpen(true)}>
+              <Plus aria-hidden="true" className="size-4" /> Registrar movimentação
+            </Button>
+          </>
         }
       />
+      <ProblemAlert error={exportError} />
       <div aria-live="polite" className="mb-4">
         {saved && (
           <Alert tone="ok" role="status">

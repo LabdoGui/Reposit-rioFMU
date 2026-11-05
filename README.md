@@ -63,7 +63,7 @@ Aumentar a **recorrência** e a **organização** da doação de sangue com uma 
 |---|---|
 | **Doador** | Cadastro, pré-triagem informativa, agendamento, histórico, notificações, conquistas, horas complementares e comprovantes |
 | **Equipe** (colaborador e enfermeiro) | Agenda do dia, check-in, triagem presencial e registro da doação |
-| **Administração** | Usuários, unidades, horários, campanhas, estoque, gamificação, relatórios e auditoria |
+| **Administração** | Usuários, unidades, horários, campanhas, estoque, gamificação, relatórios (com planilhas Excel) e auditoria |
 
 O problema, as personas e os requisitos estão detalhados em [docs/01](docs/01-visao-geral-problema-ods.md), [docs/02](docs/02-personas-e-jornada.md) e [docs/03](docs/03-requisitos.md).
 
@@ -369,7 +369,7 @@ Todas as contas são **fictícias** e usam a mesma senha: **`Pulso@2026`**. A te
 | Doador | `doador@demo.com` | Pré-triagem, agendar, histórico (já tem uma doação), conquistas, horas complementares, documentos e notificações |
 | Enfermeiro | `enfermeiro@demo.com` | Agenda do dia das unidades Centro e Campus, check-in, triagem e registro da doação |
 | Colaborador | `colaborador@demo.com` | Agenda do dia da unidade Centro e check-in (sem dados clínicos) |
-| Administrador | `admin@demo.com` | Dashboard, relatórios, Banco de Sangue, unidades e grade, campanhas, usuários, gamificação, configurações e auditoria |
+| Administrador | `admin@demo.com` | Dashboard, relatórios e Banco de Sangue (com download em planilha Excel), unidades e grade, campanhas, usuários, gamificação, configurações e auditoria |
 
 Também há 70 doadores fictícios (`…@exemplo.test`, mesma senha) com histórico, para o painel e o ranking terem dados.
 

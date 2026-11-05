@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Download, FileChartColumn } from 'lucide-react';
+import { Download, FileChartColumn, FileSpreadsheet } from 'lucide-react';
 import {
   APPOINTMENT_STATUS_LABELS,
   BLOOD_TYPE_LABELS,
@@ -27,17 +27,19 @@ import {
 } from '@/components/ui';
 import { statsQueryString, useAdminDonations, useDashboard } from '@/features/insights/api';
 import { StatsFilterBar } from '@/features/insights/StatsFilterBar';
+import { useAllUnits } from '@/features/admin/units';
 import { UnavailableAlert } from '@/features/insights/UnavailableAlert';
 import { useStatsFilters } from '@/features/insights/use-stats-filters';
 import { apiGet } from '@/lib/api';
 import { downloadCsv } from '@/lib/csv';
 import { formatDateTime, formatNumber } from '@/lib/format';
 import { useDocumentTitle } from '@/lib/use-document-title';
+import type { ReportsWorkbookInput } from '@/features/insights/reports-workbook';
 
 /** Limite da exportação de doações (as páginas são buscadas em sequência). */
 const EXPORT_LIMIT = 2000;
 
-/** Relatórios com os mesmos filtros do painel e exportação em CSV. */
+/** Relatórios com os mesmos filtros do painel e exportação em planilha Excel (ou CSV). */
 export function ReportsPage() {
   useDocumentTitle('Relatórios');
   const state = useStatsFilters();
@@ -46,41 +48,68 @@ export function ReportsPage() {
   const [page, setPage] = useState(1);
   const donations = useAdminDonations(filters, status, page);
   const stats = useDashboard(filters);
-  const [exporting, setExporting] = useState(false);
+  const units = useAllUnits();
+  const [exporting, setExporting] = useState<'xlsx' | 'csv' | null>(null);
   const [exportError, setExportError] = useState<unknown>(null);
   const suffix = `${filters.from}_a_${filters.to}`;
+  const labels = {
+    unit: filters.unitId
+      ? (units.data?.find((u) => u.id === filters.unitId)?.name ?? 'Selecionada')
+      : 'Todas',
+    bloodType: filters.bloodType ? BLOOD_TYPE_LABELS[filters.bloodType] : 'Todos',
+    status: status
+      ? DONATION_STATUS_LABELS[status as keyof typeof DONATION_STATUS_LABELS]
+      : 'Todas',
+  };
 
-  async function exportDonations() {
-    setExporting(true);
+  async function fetchDonations() {
+    const rows: AdminDonationItem[] = [];
+    let total = 0;
+    for (let current = 1; rows.length < EXPORT_LIMIT; current++) {
+      const result = await apiGet<Paginated<AdminDonationItem>>(
+        `/admin/donations?${statsQueryString(filters, { status, page: current, pageSize: 100 })}`,
+      );
+      rows.push(...result.items);
+      total = result.total;
+      if (current * result.pageSize >= result.total) break;
+    }
+    return { rows: rows.slice(0, EXPORT_LIMIT), total };
+  }
+
+  async function exportDonations(format: 'xlsx' | 'csv') {
+    setExporting(format);
     setExportError(null);
     try {
-      const rows: AdminDonationItem[] = [];
-      for (let current = 1; rows.length < EXPORT_LIMIT; current++) {
-        const result = await apiGet<Paginated<AdminDonationItem>>(
-          `/admin/donations?${statsQueryString(filters, { status, page: current, pageSize: 100 })}`,
-        );
-        rows.push(...result.items);
-        if (current * result.pageSize >= result.total) break;
+      const { rows, total } = await fetchDonations();
+      if (format === 'xlsx') {
+        // A biblioteca de planilhas só é baixada aqui, quando alguém exporta.
+        const { downloadReportsWorkbook } = await import('@/features/insights/reports-workbook');
+        await downloadReportsWorkbook({
+          filters,
+          labels,
+          stats: stats.data,
+          donations: rows,
+          donationsTotal: total,
+        });
+        return;
       }
       downloadCsv(
         `sangueconecta-doacoes-${suffix}.csv`,
         ['Data', 'Código', 'Situação', 'Tipo sanguíneo', 'Volume (mL)', 'Unidade', 'Campanha'],
-        rows
-          .slice(0, EXPORT_LIMIT)
-          .map((d) => [
-            formatDateTime(d.occurredAt),
-            d.code,
-            DONATION_STATUS_LABELS[d.status],
-            BLOOD_TYPE_LABELS[d.bloodType],
-            d.volumeMl,
-            d.unitName,
-            d.campaignTitle ?? '',
-          ]),
+        rows.map((d) => [
+          formatDateTime(d.occurredAt),
+          d.code,
+          DONATION_STATUS_LABELS[d.status],
+          BLOOD_TYPE_LABELS[d.bloodType],
+          d.volumeMl,
+          d.unitName,
+          d.campaignTitle ?? '',
+        ]),
       );
     } catch (error) {
       setExportError(error);
     } finally {
-      setExporting(false);
+      setExporting(null);
     }
   }
 
@@ -105,7 +134,8 @@ export function ReportsPage() {
                 Doações
               </h2>
               <p className="text-sm text-ink-muted">
-                A exportação traz até {formatNumber(EXPORT_LIMIT)} linhas com os filtros atuais.
+                A planilha Excel traz o resumo do período, gráficos e até{' '}
+                {formatNumber(EXPORT_LIMIT)} doações com os filtros atuais.
               </p>
             </div>
             <div className="flex flex-wrap items-end gap-3">
@@ -123,8 +153,21 @@ export function ReportsPage() {
                   setPage(1);
                 }}
               />
-              <Button variant="outline" loading={exporting} onClick={exportDonations}>
-                <Download aria-hidden="true" className="size-4" /> Exportar CSV
+              <Button
+                loading={exporting === 'xlsx'}
+                // O resumo da planilha usa os indicadores do período: espera eles carregarem.
+                disabled={exporting !== null || stats.isLoading}
+                onClick={() => exportDonations('xlsx')}
+              >
+                <FileSpreadsheet aria-hidden="true" className="size-4" /> Baixar planilha (Excel)
+              </Button>
+              <Button
+                variant="outline"
+                loading={exporting === 'csv'}
+                disabled={exporting !== null}
+                onClick={() => exportDonations('csv')}
+              >
+                <Download aria-hidden="true" className="size-4" /> CSV
               </Button>
             </div>
           </div>
@@ -185,19 +228,22 @@ export function ReportsPage() {
                   title="Doações por unidade"
                   columns={['Unidade', 'Doações']}
                   rows={byUnit.map((r) => [r.unitName, r.count])}
-                  filename={`sangueconecta-doacoes-por-unidade-${suffix}.csv`}
+                  filename={`sangueconecta-doacoes-por-unidade-${suffix}.xlsx`}
+                  context={{ filters, labels }}
                 />
                 <SummaryTable
                   title="Doações por tipo sanguíneo"
                   columns={['Tipo', 'Doações']}
                   rows={byType.map((r) => [BLOOD_TYPE_LABELS[r.bloodType], r.count])}
-                  filename={`sangueconecta-doacoes-por-tipo-${suffix}.csv`}
+                  filename={`sangueconecta-doacoes-por-tipo-${suffix}.xlsx`}
+                  context={{ filters, labels }}
                 />
                 <SummaryTable
                   title="Agendamentos por situação"
                   columns={['Situação', 'Agendamentos']}
                   rows={byStatus.map(([s, count]) => [APPOINTMENT_STATUS_LABELS[s], count])}
-                  filename={`sangueconecta-agendamentos-por-situacao-${suffix}.csv`}
+                  filename={`sangueconecta-agendamentos-por-situacao-${suffix}.xlsx`}
+                  context={{ filters, labels }}
                 />
               </div>
             </div>
@@ -213,12 +259,28 @@ function SummaryTable({
   columns,
   rows,
   filename,
+  context,
 }: {
   title: string;
   columns: [string, string];
   rows: Array<[string, number]>;
   filename: string;
+  context: Pick<ReportsWorkbookInput, 'filters' | 'labels'>;
 }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  async function download() {
+    setBusy(true);
+    setError(null);
+    try {
+      const { downloadSummaryWorkbook } = await import('@/features/insights/reports-workbook');
+      await downloadSummaryWorkbook(context, title, columns, rows, filename);
+    } catch (err) {
+      setError(err);
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <Card as="section" aria-label={title} className="space-y-3">
       <div className="flex items-center justify-between gap-2">
@@ -226,13 +288,15 @@ function SummaryTable({
         <Button
           variant="ghost"
           size="sm"
+          loading={busy}
           disabled={rows.length === 0}
-          onClick={() => downloadCsv(filename, columns, rows)}
-          aria-label={`Exportar CSV: ${title}`}
+          onClick={download}
+          aria-label={`Baixar planilha Excel: ${title}`}
         >
-          <Download aria-hidden="true" className="size-4" /> CSV
+          <FileSpreadsheet aria-hidden="true" className="size-4" /> Excel
         </Button>
       </div>
+      <ProblemAlert error={error} />
       {rows.length === 0 ? (
         <p className="text-sm text-ink-muted">Sem dados no período.</p>
       ) : (
