@@ -1,5 +1,9 @@
 # SangueConecta
 
+<p align="center">
+  <img src="docs/marca/sangueconecta-logo-horizontal.png" alt="Logotipo do SangueConecta: gota vermelha com duas pessoas formando um coração, ao lado do nome Sangue, em vermelho, e Conecta, em azul" width="420">
+</p>
+
 > **Conectando doadores a vidas que precisam de ajuda.**
 
 [![CI](https://github.com/LabdoGui/Reposit-rioFMU/actions/workflows/ci.yml/badge.svg)](https://github.com/LabdoGui/Reposit-rioFMU/actions/workflows/ci.yml)
@@ -11,14 +15,26 @@ O **SangueConecta** é uma plataforma web responsiva (PWA) de apoio à doação 
 
 Projeto **acadêmico**, desenvolvido com **dados fictícios**. Não substitui o sistema de um hemocentro nem decide quem pode doar.
 
+## Integrantes do grupo
+
+Trabalho de Conclusão de Semestre do curso de **Sistemas de Informação** do **Centro Universitário FMU** (São Paulo, 2026).
+
+| Integrantes |
+|---|
+| Eduarda Rodrigues Mardegan |
+| Guilherme dos Santos Gonçalves |
+| Joao Pedro Pereira Brandao |
+| Lucas Pereira Dorado da Silva |
+| Murilo Santos Da Silva |
+| Paulo Henrique Noronha Oliveira |
+
+**Orientador:** Prof. Gerson Lourenco Gazola
+
 ## Sobre o projeto
 
 Muita gente quer doar sangue, mas desiste no caminho: as informações sobre quem pode doar estão espalhadas, nem sempre é fácil achar a unidade e o horário, e quem doa uma vez raramente recebe um lembrete ou um agradecimento que o traga de volta. O **SangueConecta** reúne essa jornada em um só lugar: orienta a pessoa antes da doação, facilita o agendamento, acompanha o histórico e reconhece quem volta a doar. Para os hemocentros, organiza a agenda, o atendimento e o estoque.
 
-O projeto foi desenvolvido como **Trabalho de Conclusão de Semestre** do curso de **Sistemas de Informação** do **Centro Universitário FMU** (São Paulo, 2026), alinhado ao **ODS 3 — Saúde e Bem-Estar** da ONU.
-
-- **Equipe:** Eduarda Rodrigues Mardegan, Guilherme dos Santos Gonçalves, Joao Pedro Pereira Brandao, Lucas Pereira Dorado da Silva, Murilo Santos Da Silva e Paulo Henrique Noronha Oliveira.
-- **Orientador:** Gerson Lourenco Gazola.
+O projeto foi desenvolvido como **Trabalho de Conclusão de Semestre** do curso de **Sistemas de Informação** do **Centro Universitário FMU** (São Paulo, 2026), alinhado ao **ODS 3 — Saúde e Bem-Estar** da ONU. A equipe está em [Integrantes do grupo](#integrantes-do-grupo).
 
 ### Documento do projeto
 
@@ -31,11 +47,78 @@ O documento consolidado do trabalho está em **[docs/Projeto_SangueConecta_Docum
 - identidade visual (logotipo, cores, tipografia e diretrizes de uso);
 - pitch, diferenciais, conclusão e referências.
 
+## Identidade visual
+
+### Logotipo
+
+<p align="center">
+  <img src="docs/marca/sangueconecta-simbolo.svg" alt="Símbolo do SangueConecta: gota vermelha com duas pessoas formando um coração" height="130">
+  &nbsp;&nbsp;&nbsp;
+  <img src="docs/marca/sangueconecta-logo-horizontal.png" alt="Logotipo completo do SangueConecta, com o slogan" height="130">
+</p>
+
+O símbolo é uma **gota de sangue com duas pessoas cujos braços se unem formando um coração**: quem doa e quem recebe, conectados pela doação. No nome, **"Sangue" fica em vermelho** (ação e solidariedade) e **"Conecta" em azul** (confiança e saúde).
+
+- **Slogan:** *"Conectando doadores a vidas que precisam de ajuda."*
+- **Versões:**
+  - completa: símbolo, nome e slogan, para apresentações e documentos;
+  - horizontal: símbolo e nome, usada no topo do app;
+  - só o símbolo: ícone da aba do navegador e do app.
+- **Arquivos:** [`docs/marca`](docs/marca) (arte original e versão vetorial do símbolo, `sangueconecta-simbolo.svg`).
+
+### Paleta de cores
+
+| | Cor | Código | Onde é usada |
+|---|---|---|---|
+| ![](docs/marca/cores/d30a04.png) | Vermelho da marca | `#D30A04` | Gota do símbolo e "Sangue" no logotipo |
+| ![](docs/marca/cores/215f8f.png) | Azul da marca | `#215F8F` | "Conecta" no logotipo |
+| ![](docs/marca/cores/e4e3e5.png) | Cinza claro | `#E4E3E5` | Figuras dentro da gota |
+| ![](docs/marca/cores/a3123a.png) | Carmim Vital | `#A3123A` | Botões principais e destaques do app |
+| ![](docs/marca/cores/0e4d64.png) | Petróleo Clínico | `#0E4D64` | Navegação, áreas da equipe e da administração |
+| ![](docs/marca/cores/faf8f6.png) | Linho | `#FAF8F6` | Fundo das telas |
+| ![](docs/marca/cores/1f2328.png) | Grafite | `#1F2328` | Texto principal |
+| ![](docs/marca/cores/57606a.png) | Cinza Ardósia | `#57606A` | Textos de apoio e legendas |
+
+**Cores de situação** (só para estado, sempre acompanhadas de ícone e texto):
+
+| | Situação | Código | Exemplo |
+|---|---|---|---|
+| ![](docs/marca/cores/1e7f4f.png) | Adequado | `#1E7F4F` | Estoque acima do ideal, agendamento confirmado |
+| ![](docs/marca/cores/b25e00.png) | Atenção | `#B25E00` | Estoque entre o mínimo e o ideal |
+| ![](docs/marca/cores/d92d20.png) | Crítico | `#D92D20` | Estoque abaixo do mínimo, erros |
+
+O vermelho de "crítico" é propositalmente diferente do vermelho da marca, para um alerta nunca ser confundido com a identidade. Todas as combinações de texto atendem ao contraste mínimo da WCAG (AA).
+
+### Tipografia
+
+| Uso | Fonte | Por quê |
+|---|---|---|
+| Títulos | **Plus Jakarta Sans** | Geométrica e humana: moderna sem parecer infantil |
+| Textos e interface | **Inter** | Muito legível em tela, com números alinhados nos painéis |
+
+As duas são gratuitas e ficam dentro do próprio app (não dependem de serviço externo).
+
+### Diretrizes de uso
+
+- Fundos claros e alto contraste; o vermelho é destaque, nunca a tela inteira.
+- Situação nunca só pela cor: sempre ícone e texto juntos.
+- Ícones de contorno, arredondados e com rótulo.
+- Linguagem acolhedora: nada de imagens de agulhas, cenas hospitalares fortes ou comunicação baseada em medo e culpa.
+- Não usar a cruz vermelha (emblema protegido pelas Convenções de Genebra).
+
+### A identidade aplicada no app
+
+![Página inicial do SangueConecta no computador e tela inicial do doador no celular, com a logo, as cores e as fontes da marca](docs/marca/identidade-no-app.jpg)
+
+O guia completo, com escala tipográfica, componentes e identidade de cada tela, está em [docs/12 — Identidade visual](docs/12-identidade-visual.md).
+
 ---
 
 ## Sumário
 
+- [Integrantes do grupo](#integrantes-do-grupo)
 - [Sobre o projeto](#sobre-o-projeto)
+- [Identidade visual](#identidade-visual)
 - [Objetivo](#objetivo)
 - [ODS 3 — Saúde e Bem-Estar](#ods-3--saúde-e-bem-estar)
 - [Reconhecimento dos doadores (premiações)](#reconhecimento-dos-doadores-premiações)
