@@ -1,5 +1,7 @@
 # 03 — Requisitos e regras de negócio
 
+> **Proposta do Checkpoint 1.** Na implementação, o back-end foi feito em **Node.js + NestJS + Prisma**, e não em Spring Boot; o que está no código está na [stack implementada](08-stack.md#stack-implementada) e no [documento 16](16-plano-de-implementacao.md). Nos requisitos abaixo, isso muda as ferramentas, não os requisitos: a documentação OpenAPI vem do `@nestjs/swagger` (não do springdoc), as migrações são do Prisma Migrate (não do Flyway), os testes usam Jest (não Testcontainers), a saúde dos serviços é exposta por rotas próprias (não pelo Actuator) e o teste de carga é o `scripts/load-test.mjs` (não o k6). As notificações aparecem na central do app (o sino); o envio de e-mail não foi implementado.
+
 > Priorização **MoSCoW**: **Must** (indispensável ao MVP), **Should** (importante, entra no MVP se houver tempo, senão na V2), **Could** (desejável, V2 ou Futuro).
 > A coluna "Serviço" antecipa a arquitetura do [documento 06](06-arquitetura.md).
 

@@ -1,5 +1,7 @@
 # 13 — MVP e roadmap
 
+> **Proposta do Checkpoint 1.** Na implementação, o back-end foi feito em **Node.js + NestJS + Prisma**, e não em Spring Boot; o que está no código está na [stack implementada](08-stack.md#stack-implementada) e no [documento 16](16-plano-de-implementacao.md). Mailpit, Testcontainers e k6, citados abaixo, não foram usados (o teste de carga é o `scripts/load-test.mjs`). O andamento real está no [README](../README.md#status-do-desenvolvimento).
+
 ## PARTE 15 — MVP
 
 ### 15.1 Critério de corte

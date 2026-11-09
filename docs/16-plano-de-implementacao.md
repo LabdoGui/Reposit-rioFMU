@@ -72,18 +72,22 @@ flowchart LR
 
 | Camada | Tecnologia | Observação |
 |---|---|---|
-| Frontend | React + TypeScript + Vite, Tailwind CSS v4, React Router, TanStack Query, React Hook Form + Zod, Recharts, lucide-react | Uma SPA para os 3 perfis, layouts por perfil |
+| Frontend | React + TypeScript + Vite, Tailwind CSS v4, React Router, TanStack Query, React Hook Form + Zod, Recharts, lucide-react, Luxon | Uma SPA para os 3 perfis, layouts por perfil |
 | Back-end | Node.js 22 + NestJS 11 + TypeScript | Um app NestJS por serviço, em monorepo (npm workspaces) |
 | Validação | class-validator / class-transformer (DTOs → Swagger automático); Zod para variáveis de ambiente | |
 | ORM | Prisma 6 | Um `schema.prisma` por serviço, cliente gerado em `<serviço>/generated/prisma` (fora do `src`, para o mesmo caminho relativo valer em `src` e em `dist`) |
 | Banco | PostgreSQL 16 | 1 instância, 1 schema e 1 usuário por serviço |
 | Mensageria | RabbitMQ 3.13 + `amqplib`/`amqp-connection-manager` | Consistente com a proposta do CP1 |
 | Autenticação | `jose` (JWT RS256 + JWKS), `@node-rs/argon2` (hash Argon2id) | |
-| PDF | `pdfkit` + `qrcode` | |
+| PDF | `pdfkit` + `qrcode` | Na demonstração no navegador, `jspdf` + `qrcode` |
+| Planilhas | `exceljs` (no front-end) | Relatórios e Banco de Sangue baixados em Excel |
+| Tarefas agendadas | `@nestjs/schedule` | Lembretes, agendamentos vencidos e retenção das respostas da pré-triagem |
 | Logs | `nestjs-pino` (JSON, `requestId`) | |
 | Docs da API | `@nestjs/swagger` em cada serviço (`/docs`) + página agregada no gateway | |
 | Testes | Jest (unidade e integração), script E2E da jornada via API, Playwright para a jornada na interface | |
-| Infra | Docker, Docker Compose, nginx | `docker compose up --build` |
+| Infra | Docker, Docker Compose, nginx, GitHub Actions | `docker compose up --build` |
+| PWA | Manifest + service worker próprio (`frontend/public/sw.js`) | Instalável; guarda só o casco do app, nunca a API |
+| Demonstração | Vite + `vite-plugin-singlefile`, publicada no GitHub Pages | Mesmo front-end com servidor simulado na página (`frontend/src/demo`) |
 
 **Redis:** não é necessário no MVP. O rate limit do gateway é um middleware próprio em memória (janela fixa por IP, testado com relógio injetado), suficiente para uma instância. Redis entra na V2 se houver várias réplicas do gateway.
 

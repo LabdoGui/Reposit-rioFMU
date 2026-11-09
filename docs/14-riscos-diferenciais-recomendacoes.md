@@ -1,5 +1,7 @@
 # 14 — Riscos, diferenciais e recomendações
 
+> **Proposta do Checkpoint 1.** Na implementação, o back-end foi feito em **Node.js + NestJS + Prisma**, e não em Spring Boot; o que está no código está na [stack implementada](08-stack.md#stack-implementada) e no [documento 16](16-plano-de-implementacao.md). Nas mitigações abaixo: a autenticação usa `jose` (não Spring Security + Nimbus), o teste de concorrência e carga é o `scripts/load-test.mjs` (não o k6) e o Mailpit não foi usado.
+
 ## PARTE 17 — Riscos
 
 Escala: **P** = probabilidade, **I** = impacto (B = baixo, M = médio, A = alto).
