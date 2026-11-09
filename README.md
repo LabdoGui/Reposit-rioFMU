@@ -289,7 +289,17 @@ npm run build:demo -w @pulso/frontend   # gera frontend/dist-demo/demo.html (~2,
 npm run dev:demo -w @pulso/frontend     # ou: versão de desenvolvimento em /demo.html
 ```
 
-A versão publicada fica em <https://labdogui.github.io/Reposit-rioFMU/sangueconecta/> (GitHub Pages, branch `gh-pages`, pasta `sangueconecta/`; o endereço antigo `/pulso/` redireciona para ele). O arquivo abre com dois cliques no navegador ou publicado em qualquer hospedagem estática; as rotas ficam depois do `#` (ex.: `demo.html#/admin`). As contas de demonstração são as mesmas. O que a pessoa faz fica só naquele aparelho (localStorage), recomeça a cada dia e pode ser apagado pelo botão **Recomeçar** do aviso. A jornada de 22 passos roda também na demonstração (`BASE_URL=http://localhost:4173/demo.html npm run e2e:ui`, com `npx vite preview --mode demo` em `frontend/`), e o CI a executa a cada push. O build normal do app (`npm run build`) não inclui nada da demonstração.
+A versão publicada fica em <https://labdogui.github.io/Reposit-rioFMU/sangueconecta/> (GitHub Pages, branch `gh-pages`, pasta `sangueconecta/`; o endereço antigo `/pulso/` redireciona para ele). Para publicar uma versão nova, copie de `frontend/dist-demo/` para a pasta `sangueconecta/` do `gh-pages` o `demo.html` (como `index.html`) junto com `sw.js`, `manifest.webmanifest`, `favicon.svg` e a pasta `icons/`, que fazem a demonstração ser instalável ([Instalar como app](#instalar-como-app-pwa)). O arquivo abre com dois cliques no navegador ou publicado em qualquer hospedagem estática; as rotas ficam depois do `#` (ex.: `demo.html#/admin`). As contas de demonstração são as mesmas. O que a pessoa faz fica só naquele aparelho (localStorage), recomeça a cada dia e pode ser apagado pelo botão **Recomeçar** do aviso. A jornada de 22 passos roda também na demonstração (`BASE_URL=http://localhost:4173/demo.html npm run e2e:ui`, com `npx vite preview --mode demo` em `frontend/`), e o CI a executa a cada push. O build normal do app (`npm run build`) não inclui nada da demonstração.
+
+### Instalar como app (PWA)
+
+O SangueConecta pode ser instalado no celular e no computador, com ícone próprio e abrindo em tela cheia: na demonstração publicada, no Codespaces ou no app rodando no Docker (o navegador exige HTTPS ou `localhost`).
+
+- **Android (Chrome):** menu ⋮ → **Instalar app** (ou o aviso que aparece na parte de baixo da tela).
+- **iPhone (Safari):** botão Compartilhar → **Adicionar à Tela de Início**.
+- **Computador (Chrome ou Edge):** ícone de instalar na barra de endereço.
+
+O [`manifest.webmanifest`](frontend/public/manifest.webmanifest) descreve o app (nome, cores e ícones) e o [service worker](frontend/public/sw.js) guarda no aparelho só o casco do app: HTML, JS, CSS, fontes e ícones. As páginas vêm da rede primeiro, então quem instalou recebe cada versão nova sem fazer nada; sem internet, ou com a rede demorando mais de 3,5 s, abre a última versão guardada. **Respostas da API nunca são guardadas no aparelho** (dados pessoais e de saúde, LGPD): sem internet o app abre, mas as telas ficam sem os dados até a conexão voltar. A demonstração, que tem o servidor simulado dentro da própria página, funciona inteira sem internet depois da primeira visita. O service worker só é registrado no build de produção (no `npm run dev`, não).
 
 ### No seu computador
 
@@ -493,7 +503,7 @@ O desenho completo da API está em [docs/09](docs/09-api.md) e [docs/16, item 4]
 
 ```
 /
-├─ frontend/                 React + Vite (doador, equipe e administração)
+├─ frontend/                 React + Vite (doador, equipe e administração); PWA em public/
 ├─ backend/
 │  ├─ gateway/               NestJS: proxy, segurança de borda, estado dos serviços, documentação
 │  ├─ services/
