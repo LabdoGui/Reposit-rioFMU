@@ -1,5 +1,7 @@
 # 10 — Segurança e LGPD
 
+> **Proposta do Checkpoint 1.** Na implementação, o back-end foi feito em **Node.js + NestJS + Prisma**, e não em Spring Boot; o que está no código está na [stack implementada](08-stack.md#stack-implementada) e no [documento 16](16-plano-de-implementacao.md). As proteções abaixo foram mantidas, com estas trocas: acesso ao banco pelo Prisma (não JPA), senhas só com Argon2id (o BCrypt não é usado) e sem Actuator.
+
 > **Premissa do protótipo:** só existem **dados fictícios**. Mesmo assim, o sistema é projetado como se fosse tratar dados reais, porque isso é o que se avalia e o que torna a proposta defensável.
 > Este documento **não é parecer jurídico**. Os pontos marcados [VALIDAR-JURÍDICO] precisam de revisão por orientador, jurídico ou encarregado de dados da instituição parceira.
 

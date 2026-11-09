@@ -1,5 +1,7 @@
 # 05 — Fluxos
 
+> **Proposta do Checkpoint 1.** Na implementação, o back-end foi feito em **Node.js + NestJS + Prisma**, e não em Spring Boot; o que está no código está na [stack implementada](08-stack.md#stack-implementada) e no [documento 16](16-plano-de-implementacao.md). Os fluxos abaixo valem para o código, com uma exceção: o notification-service grava as notificações para a central do app (o sino), e os canais de e-mail (SMTP/Mailpit) e push não foram implementados.
+
 > Diagramas em **Mermaid**, que o GitHub renderiza automaticamente. Para os slides, exporte em [mermaid.live](https://mermaid.live).
 
 ## 1. Fluxo do doador

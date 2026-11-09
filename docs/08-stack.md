@@ -3,6 +3,25 @@
 > Critérios de escolha, em ordem de peso: **(1) o que a equipe já domina**, (2) suporte maduro a microsserviços e segurança, (3) documentação e comunidade, (4) custo zero, (5) clareza na apresentação acadêmica.
 > **Regra de ouro:** se a equipe já domina TypeScript e não domina Java, troque o back-end por NestJS. A arquitetura não muda.
 
+## Stack implementada
+
+A regra de ouro foi aplicada: o back-end foi implementado em **Node.js + NestJS + Prisma**, e não em Java + Spring Boot. A arquitetura (gateway, 6 serviços, um schema por serviço, RabbitMQ) ficou igual. **É esta a stack que está no código**; a lista completa, com versões, está no [README](../README.md#tecnologias).
+
+| Camada | O que está no código |
+|---|---|
+| Linguagens | **TypeScript** (front-end e back-end, mais de 90% do código), SQL (migrações), Prisma Schema, HTML e CSS (Tailwind), JavaScript (scripts de teste e service worker), Shell, Dockerfile e YAML |
+| Front-end | React 19, Vite 7, Tailwind CSS 4, React Router 7, TanStack Query 5, React Hook Form + Zod, Recharts, lucide-react, Luxon, ExcelJS; PWA com manifest e service worker próprio |
+| Back-end | Node.js 22, NestJS 11, class-validator, `@nestjs/swagger`, `@nestjs/schedule`, `nestjs-pino` |
+| API Gateway | NestJS com `http-proxy-middleware` e rate limit próprio em memória (no lugar do Spring Cloud Gateway) |
+| Dados | PostgreSQL 16 + Prisma 6 (Prisma Migrate no lugar de JPA e Flyway) |
+| Mensageria | RabbitMQ 3.13 com `amqplib` + `amqp-connection-manager`, outbox transacional e DLQ |
+| Segurança | `jose` (JWT RS256 + JWKS), Argon2id (`@node-rs/argon2`), helmet, AES-256-GCM em campos sensíveis |
+| Documentos | PDFKit + `qrcode` no servidor; jsPDF na demonstração no navegador |
+| Testes | Jest + ts-jest; jornada E2E de 22 passos (API e Playwright), matriz de autorização e teste de carga em scripts Node (`scripts/`), no lugar de JUnit, Testcontainers e k6 |
+| Infraestrutura | Docker, Docker Compose, nginx, GitHub Actions, GitHub Codespaces e GitHub Pages (demonstração) |
+
+**Citados na proposta abaixo, mas não usados no código:** Java, Spring Boot, Spring Cloud Gateway, Spring Security, JPA, Flyway, springdoc, Actuator, Resilience4j, Logback, JUnit, Mockito, Testcontainers, ArchUnit, k6, Redis, Bucket4j, MinIO, Mailpit, Caddy, Trivy, gitleaks, shadcn/ui, Radix UI, Vitest, Testing Library, openapi-typescript e vite-plugin-pwa. As seções 9.1 a 9.5 abaixo são a análise da proposta do Checkpoint 1, mantida como registro da decisão.
+
 ## 9.1 Front-end
 
 | Opção | Prós | Contras | Veredito |

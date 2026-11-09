@@ -1,5 +1,7 @@
 # 15 — Roteiro do Checkpoint 1 (19/10 a 23/10/2026)
 
+> **Roteiro já apresentado no Checkpoint 1**, com a stack da proposta (Spring Boot). Na implementação, o back-end foi feito em **Node.js + NestJS + Prisma**; o que está no código está na [stack implementada](08-stack.md#stack-implementada) e no [documento 16](16-plano-de-implementacao.md).
+
 > Formato sugerido: **20 slides, de 12 a 15 minutos + perguntas**. Cada slide indica o conteúdo, a fonte na documentação e quem apresenta.
 > Princípio: **um slide, uma ideia**. Os detalhes técnicos (DDL, endpoints completos) vão para o apêndice ou para o repositório.
 

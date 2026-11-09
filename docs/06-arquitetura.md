@@ -1,5 +1,7 @@
 # 06 — Arquitetura: microsserviços + API REST
 
+> **Proposta do Checkpoint 1.** Na implementação, o back-end foi feito em **Node.js + NestJS + Prisma**, e não em Spring Boot; o que está no código está na [stack implementada](08-stack.md#stack-implementada) e no [documento 16](16-plano-de-implementacao.md). A arquitetura abaixo (gateway, 6 serviços, um schema por serviço, RabbitMQ com outbox) é a que está no código, com estas trocas: gateway e serviços em NestJS (não Spring Cloud Gateway e Spring Boot), migrações do Prisma (não Flyway), logs com `nestjs-pino` (não Logback), saúde por rotas próprias (não Actuator) e chamadas internas com timeout curto, sem circuit breaker (não Resilience4j). Não há envio de e-mail (SMTP), e os PDFs ficam no próprio banco do serviço clinical (não em volume nem em S3). O diagrama atualizado está no [README](../README.md#arquitetura).
+
 ## 7.1 Análise crítica da premissa
 
 O enunciado sugere 11 serviços. **Para uma equipe acadêmica de 4 a 6 pessoas, isso é microsserviço "para cumprir requisito"**: cada serviço exige build, deploy, banco, segurança, testes e observabilidade próprios. O custo cresce de forma linear e o valor não acompanha.

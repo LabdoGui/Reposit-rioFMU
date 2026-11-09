@@ -251,17 +251,36 @@ Por que 6 serviços e não 11, como os eventos fluem e as decisões tomadas: [do
 
 ## Tecnologias
 
+### Linguagens
+
+| Linguagem | Onde é usada |
+|---|---|
+| **TypeScript** | Linguagem principal (mais de 90% do código): o front-end React e todos os serviços NestJS. Os tipos da API ficam em `backend/libs/contracts` e são usados pelos dois lados |
+| **SQL** | Migrações do PostgreSQL (`prisma/migrations` de cada serviço), inclusive as regras que o Prisma não expressa (CHECK e índices únicos parciais) |
+| **Prisma Schema** | Modelo de dados de cada serviço (`prisma/schema.prisma`) |
+| **HTML e CSS** | Páginas da interface; o estilo é escrito com as classes do Tailwind CSS |
+| **JavaScript** | Scripts de teste e automação (`scripts/*.mjs`) e o service worker do PWA (`frontend/public/sw.js`) |
+| **Shell** | Inicialização dos contêineres, do banco e do Codespaces (`docker/`, `database/init/`, `.devcontainer/`) |
+| **Dockerfile** | Imagens dos serviços e do front-end (`docker/`) |
+| **YAML** | Docker Compose e GitHub Actions |
+
+### Bibliotecas e ferramentas
+
 | Camada | Tecnologias |
 |---|---|
-| Frontend | React 19, TypeScript, Vite 7, Tailwind CSS 4, React Router 7, TanStack Query 5, React Hook Form + Zod, Recharts, lucide-react |
-| Back-end | Node.js 22, NestJS 11, TypeScript 5.9, npm workspaces (monorepo) |
-| Dados | PostgreSQL 16, Prisma 6 (um `schema.prisma` por serviço) |
-| Mensageria | RabbitMQ 3.13 (`amqplib` + `amqp-connection-manager`) |
+| Frontend | React 19, TypeScript, Vite 7, Tailwind CSS 4, React Router 7, TanStack Query 5, React Hook Form + Zod, Recharts, lucide-react, Luxon (datas), ExcelJS (planilhas Excel) |
+| Back-end | Node.js 22, NestJS 11, TypeScript 5.9, class-validator, npm workspaces (monorepo) |
+| API Gateway | NestJS com `http-proxy-middleware`, rate limit próprio e documentação unificada |
+| Dados | PostgreSQL 16, Prisma 6 (um `schema.prisma` e migrações próprias por serviço) |
+| Mensageria | RabbitMQ 3.13 (`amqplib` + `amqp-connection-manager`), com outbox transacional e consumidores idempotentes |
 | Segurança | `jose` (JWT RS256 + JWKS), Argon2id (`@node-rs/argon2`), helmet, AES-256-GCM para campos sensíveis |
+| Documentos | PDFKit + `qrcode` (declarações em PDF com QR code de verificação); jsPDF na demonstração no navegador |
+| Tarefas agendadas | `@nestjs/schedule` (lembretes de agendamento, agendamentos vencidos e retenção das respostas da pré-triagem) |
 | Observabilidade | Logs JSON com `nestjs-pino` e `x-request-id` de ponta a ponta |
 | Documentação | `@nestjs/swagger` (OpenAPI) em cada serviço, unificada no gateway |
-| Testes | Jest + ts-jest (unitários), jornada E2E dos 22 passos, matriz de autorização e teste de carga (scripts Node sem dependências), Playwright na revisão visual |
-| Infraestrutura | Docker, Docker Compose, nginx, GitHub Actions |
+| PWA | Manifest e service worker próprio (`frontend/public/sw.js`), sem dependências |
+| Testes | Jest + ts-jest (unitários), jornada E2E dos 22 passos, matriz de autorização e teste de carga (scripts Node sem dependências), Playwright (jornada pela interface) |
+| Infraestrutura | Docker, Docker Compose, nginx 1.27, GitHub Actions, GitHub Codespaces e GitHub Pages (demonstração em arquivo único com `vite-plugin-singlefile`) |
 
 ## Requisitos
 
@@ -564,7 +583,7 @@ O desenho completo da API está em [docs/09](docs/09-api.md) e [docs/16, item 4]
 | — | [Referências verificadas](docs/referencias.md) |
 | — | [Documento consolidado do projeto (Word)](docs/Projeto_SangueConecta_Documento_Consolidado_Revisado.docx) |
 
-Os documentos 01 a 15 formam a proposta do Checkpoint 1 (com stack Spring Boot); o documento 16 registra o que mudou na implementação (NestJS + Prisma, 4 papéis fixos, estoque central). Os documentos usam etiquetas para separar fatos de hipóteses:
+Os documentos 01 a 15 formam a proposta do Checkpoint 1 (com stack Spring Boot); o documento 16 registra o que mudou na implementação (NestJS + Prisma, 4 papéis fixos, estoque central). Os documentos da proposta que citam ferramentas não usadas trazem um aviso no topo, e a stack que está no código fica em [Tecnologias](#tecnologias) e na [stack implementada](docs/08-stack.md#stack-implementada). Os documentos usam etiquetas para separar fatos de hipóteses:
 
 | Etiqueta | Significado |
 |---|---|
