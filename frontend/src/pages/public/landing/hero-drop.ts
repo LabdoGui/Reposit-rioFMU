@@ -40,7 +40,7 @@ mat3 toLocal; // desfaz o giro: do mundo para o espaço da gota
 // Distância (aproximada) do ponto até a superfície da gota.
 float map(vec3 p) {
   vec3 q = toLocal * p;
-  return max((length(q.xz) - profile(q.y)) * 0.72, abs(q.y) - 1.0) - 0.006;
+  return max((length(q.xz) - profile(q.y)) * 0.72 - 0.006, abs(q.y) - 1.0);
 }
 
 vec3 normalAt(vec3 p) {
