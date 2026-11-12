@@ -60,8 +60,16 @@ jobs:
         run: |
           mkdir site
           cp frontend/dist-demo/demo.html site/index.html
-          cp frontend/dist-demo/sw.js frontend/dist-demo/manifest.webmanifest frontend/dist-demo/favicon.svg site/
+          cp frontend/dist-demo/sw.js frontend/dist-demo/manifest.webmanifest frontend/dist-demo/favicon.svg frontend/dist-demo/favicon.png site/
           cp -r frontend/dist-demo/icons site/icons
+
+      - name: Conferir os arquivos de instalação (PWA)
+        # O iPhone lê o ícone do HTML: os dois caminhos precisam estar lá, relativos à página.
+        run: |
+          grep -q 'href="manifest.webmanifest"' site/index.html
+          grep -q 'href="icons/apple-touch-icon.png"' site/index.html
+          test -s site/icons/apple-touch-icon.png
+          test -s site/favicon.png
 
       - name: Guardar a demonstração construída
         uses: actions/upload-artifact@v4

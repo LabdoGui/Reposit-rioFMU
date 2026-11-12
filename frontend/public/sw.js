@@ -27,7 +27,7 @@ const shellUrl = scope.href;
 const apiPath = new URL('api/', scope).pathname;
 const staticFiles = [
   'manifest.webmanifest',
-  'favicon.svg',
+  'favicon.png',
   'icons/icon-192.png',
   'icons/apple-touch-icon.png',
 ].map((path) => new URL(path, scope).href);

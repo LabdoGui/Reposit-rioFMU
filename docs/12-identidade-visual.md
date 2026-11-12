@@ -64,7 +64,7 @@ Todas são gratuitas (Google Fonts).
 
 - **Símbolo:** uma **gota vermelha** com **duas pessoas** cujos braços se unem formando um **coração**: quem doa e quem recebe, conectados pela doação. Arquivos em [`docs/marca`](marca) (arte original e versão vetorial `sangueconecta-simbolo.svg`, usada no app e no favicon).
 - **Logotipo:** "SangueConecta" em negrito, com **"Sangue" em vermelho** (`#D30A04`) e **"Conecta" em azul** (`#215F8F`), ao lado do símbolo; slogan abaixo na versão completa ([`docs/marca/sangueconecta-logo.jpg`](marca/sangueconecta-logo.jpg)).
-- **Versões:** horizontal (símbolo + nome), vertical, só símbolo (favicon e ícone da PWA), monocromática (carmim, petróleo, branco).
+- **Versões:** horizontal (símbolo + nome), vertical, só símbolo (favicon e ícone da PWA, renderizados em 3D a partir da gota da página inicial), monocromática (carmim, petróleo, branco).
 - **Área de proteção:** altura do "S" em volta do logotipo; tamanho mínimo de 24 px de altura para o símbolo.
 - **Evitar:**
   - a **cruz vermelha sobre fundo branco**: é um emblema protegido pelas Convenções de Genebra e não pode ser usado como marca;

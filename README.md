@@ -63,7 +63,7 @@ O símbolo é uma **gota de sangue com duas pessoas cujos braços se unem forman
 - **Versões:**
   - completa: símbolo, nome e slogan, para apresentações e documentos;
   - horizontal: símbolo e nome, usada no topo do app;
-  - só o símbolo: ícone da aba do navegador e do app.
+  - só o símbolo, em 3D: ícone da aba do navegador e do app na tela de início do celular (a mesma gota 3D da página inicial).
 - **Arquivos:** [`docs/marca`](docs/marca) (arte original e versão vetorial do símbolo, `sangueconecta-simbolo.svg`).
 
 ### Paleta de cores
@@ -308,7 +308,7 @@ npm run build:demo -w @pulso/frontend   # gera frontend/dist-demo/demo.html (~2,
 npm run dev:demo -w @pulso/frontend     # ou: versão de desenvolvimento em /demo.html
 ```
 
-A versão publicada fica em <https://labdogui.github.io/Reposit-rioFMU/sangueconecta/> (GitHub Pages, branch `gh-pages`, pasta `sangueconecta/`; o endereço antigo `/pulso/` redireciona para ele). A publicação é automática: a cada mudança no front-end que entra no `main`, o workflow [`demo-pages.yml`](.github/workflows/demo-pages.yml) constrói a demonstração e troca a pasta `sangueconecta/` do `gh-pages` (o `demo.html` como `index.html`, junto com `sw.js`, `manifest.webmanifest`, `favicon.svg` e `icons/`, que fazem a demonstração ser instalável: [Instalar como app](#instalar-como-app-pwa)). Em pull requests, o mesmo workflow guarda a demonstração construída como artefato (`demonstracao`), para quem revisa abrir antes do merge. O arquivo abre com dois cliques no navegador ou publicado em qualquer hospedagem estática; as rotas ficam depois do `#` (ex.: `demo.html#/admin`). As contas de demonstração são as mesmas. O que a pessoa faz fica só naquele aparelho (localStorage), recomeça a cada dia e pode ser apagado pelo botão **Recomeçar** do aviso. A jornada de 22 passos roda também na demonstração (`BASE_URL=http://localhost:4173/demo.html npm run e2e:ui`, com `npx vite preview --mode demo` em `frontend/`), e o CI a executa a cada push. O build normal do app (`npm run build`) não inclui nada da demonstração.
+A versão publicada fica em <https://labdogui.github.io/Reposit-rioFMU/sangueconecta/> (GitHub Pages, branch `gh-pages`, pasta `sangueconecta/`; o endereço antigo `/pulso/` redireciona para ele). A publicação é automática: a cada mudança no front-end que entra no `main`, o workflow [`demo-pages.yml`](.github/workflows/demo-pages.yml) constrói a demonstração e troca a pasta `sangueconecta/` do `gh-pages` (o `demo.html` como `index.html`, junto com `sw.js`, `manifest.webmanifest`, `favicon.svg`, `favicon.png` e `icons/`, que fazem a demonstração ser instalável: [Instalar como app](#instalar-como-app-pwa)). Em pull requests, o mesmo workflow guarda a demonstração construída como artefato (`demonstracao`), para quem revisa abrir antes do merge. O arquivo abre com dois cliques no navegador ou publicado em qualquer hospedagem estática; as rotas ficam depois do `#` (ex.: `demo.html#/admin`). As contas de demonstração são as mesmas. O que a pessoa faz fica só naquele aparelho (localStorage), recomeça a cada dia e pode ser apagado pelo botão **Recomeçar** do aviso. A jornada de 22 passos roda também na demonstração (`BASE_URL=http://localhost:4173/demo.html npm run e2e:ui`, com `npx vite preview --mode demo` em `frontend/`), e o CI a executa a cada push. O build normal do app (`npm run build`) não inclui nada da demonstração.
 
 ### Instalar como app (PWA)
 
