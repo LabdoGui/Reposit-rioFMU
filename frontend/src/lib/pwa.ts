@@ -30,8 +30,9 @@ export function setupPwa(): void {
 }
 
 /**
- * Na demonstração, o manifest e o ícone do iPhone entram por aqui: o HTML vira um
- * arquivo único e o Vite resolveria esses caminhos a partir da raiz do site.
+ * Garantia para a demonstração: o manifest e o ícone do iPhone já vêm no demo.html
+ * (com caminhos relativos à página); se por algum motivo não estiverem lá, entram
+ * por aqui.
  */
 function linkInstallFiles(): void {
   const files = [
