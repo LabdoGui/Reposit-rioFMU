@@ -120,7 +120,8 @@ export function addSheet(
       margins: { left: 0.4, right: 0.4, top: 0.45, bottom: 0.6, header: 0.2, footer: 0.3 },
     },
     headerFooter: {
-      oddFooter: `&L&"${FONT_NAME}"&8SangueConecta · dados fictícios (projeto acadêmico)&C&"${FONT_NAME}"&8&A&R&"${FONT_NAME}"&8Página &P de &N`,
+      // &8 = tamanho da letra; &A = nome da aba; &P de &N = página atual e total.
+      oddFooter: '&L&8SangueConecta · dados fictícios (projeto acadêmico)&C&8&A&R&8Página &P de &N',
     },
   });
   widths.forEach((width, index) => {
