@@ -56,12 +56,18 @@ function wrap(label: string, width = 16): string[] {
   return rest ? [first, truncate(rest, width + 2)] : [first];
 }
 
-/** Arredonda o topo do eixo para um valor "redondo". */
+/**
+ * Topo do eixo: o menor valor "redondo" que cabe os dados e divide em 4 partes
+ * inteiras (4, 8, 12, 20, 40, 100…). Assim o eixo de contagens nunca mostra
+ * números quebrados como 2,5 ou 3,8.
+ */
 function niceMax(value: number): number {
-  if (value <= 0) return 1;
-  const power = 10 ** Math.floor(Math.log10(value));
-  const step = [1, 2, 2.5, 5, 10].find((m) => m * power >= value) ?? 10;
-  return step * power;
+  for (let power = 1; ; power *= 10) {
+    for (const step of [1, 2, 2.5, 3, 4, 5]) {
+      if (step === 2.5 && power === 1) continue;
+      if (step * power * 4 >= value) return step * power * 4;
+    }
+  }
 }
 
 function title(ctx: CanvasRenderingContext2D, text: string, subtitle?: string) {
@@ -91,7 +97,7 @@ function yAxis(ctx: CanvasRenderingContext2D, area: Area, max: number) {
     ctx.lineTo(area.right, y);
     ctx.stroke();
     ctx.fillStyle = MUTED;
-    ctx.fillText(integer.format(Math.round(value * 10) / 10), area.left - 8, y);
+    ctx.fillText(integer.format(value), area.left - 8, y);
   }
 }
 
@@ -159,13 +165,6 @@ export function barChartPng(options: BarChartOptions): string | null {
     const x = area.left + slot * i + (slot - barWidth) / 2;
     ctx.fillStyle = css(options.colors?.[i] ?? options.color ?? '#d30a04');
     roundedTop(ctx, x, area.bottom - h, barWidth, Math.max(h, value > 0 ? 1 : 0));
-    if (n <= 16) {
-      ctx.fillStyle = INK;
-      ctx.font = `600 11px ${FONT}`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(integer.format(value), x + barWidth / 2, area.bottom - h - 4);
-    }
     ctx.save();
     ctx.fillStyle = MUTED;
     ctx.font = `400 11px ${FONT}`;
@@ -199,6 +198,22 @@ export function barChartPng(options: BarChartOptions): string | null {
     });
   }
   ctx.setLineDash([]);
+  // Valores por cima de tudo, com contorno branco: continuam legíveis sobre os marcadores.
+  if (n <= 16) {
+    ctx.font = `600 11px ${FONT}`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#ffffff';
+    ctx.fillStyle = INK;
+    options.values.forEach((value, i) => {
+      const x = area.left + slot * i + slot / 2;
+      const y = area.bottom - ((area.bottom - area.top) * value) / max - 4;
+      ctx.strokeText(integer.format(value), x, y);
+      ctx.fillText(integer.format(value), x, y);
+    });
+  }
   if (hasLegend)
     legend(
       ctx,
@@ -295,17 +310,37 @@ function truncate(text: string, max: number) {
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
 }
 
-/** Símbolo do SangueConecta (gota com as duas pessoas) em PNG, para o cabeçalho. */
-export function symbolPng(height: number): string | null {
+/**
+ * Símbolo do SangueConecta (gota com as duas pessoas) em PNG, para o cabeçalho.
+ * Com `background`, o símbolo vem dentro de um quadro arredondado dessa cor
+ * (para ficar legível sobre a faixa escura).
+ */
+export function symbolPng(height: number, background?: string): string | null {
   const [, , vw, vh] = SYMBOL_VIEWBOX.split(' ').map(Number);
-  const width = Math.round((height * vw) / vh);
+  const padding = background ? Math.round(height * 0.1) : 0;
+  const symbolHeight = height - padding * 2;
+  const symbolWidth = Math.round((symbolHeight * vw) / vh);
+  const width = symbolWidth + padding * 2;
   if (typeof document === 'undefined' || typeof Path2D === 'undefined') return null;
   const element = document.createElement('canvas');
   element.width = width;
   element.height = height;
   const ctx = element.getContext('2d');
   if (!ctx) return null;
-  ctx.scale(width / vw, height / vh);
+  if (background) {
+    const radius = height * 0.16;
+    ctx.fillStyle = background;
+    ctx.beginPath();
+    ctx.moveTo(radius, 0);
+    ctx.arcTo(width, 0, width, height, radius);
+    ctx.arcTo(width, height, 0, height, radius);
+    ctx.arcTo(0, height, 0, 0, radius);
+    ctx.arcTo(0, 0, width, 0, radius);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.translate(padding, padding);
+  ctx.scale(symbolWidth / vw, symbolHeight / vh);
   ctx.fillStyle = '#d30a04';
   ctx.fill(new Path2D(SYMBOL_DROP_PATH));
   ctx.fillStyle = '#e4e3e5';

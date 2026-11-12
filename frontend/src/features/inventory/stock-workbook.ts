@@ -1,7 +1,8 @@
 /**
- * Planilha "Banco de Sangue": estoque atual com situação colorida e % do ideal,
- * histórico diário por tipo e todas as movimentações (com totais de entradas e
- * saídas). Carregada só quando o administrador pede o download.
+ * Planilha "Banco de Sangue". A primeira aba é um painel de uma página: os
+ * números principais, o que precisa de ação e os níveis por tipo. As outras
+ * trazem o histórico diário e todas as movimentações (com totais que
+ * acompanham o filtro). Carregada só quando o administrador pede o download.
  */
 import type { Workbook } from 'exceljs';
 import {
@@ -13,10 +14,11 @@ import {
   type MovementView,
   type Paginated,
   type StockHistoryResponse,
+  type StockItemView,
   type StockOverview,
 } from '@pulso/contracts';
 import { apiGet } from '@/lib/api';
-import { formatDate, formatDateTime, todayIso } from '@/lib/format';
+import { formatDate, formatDateTime, formatNumber, todayIso } from '@/lib/format';
 import { barChartPng, lineChartPng } from '@/lib/spreadsheet/charts';
 import {
   FORMATS,
@@ -29,12 +31,20 @@ import {
   downloadWorkbook,
   excelDate,
   excelDateTime,
+  font,
   generatedAtLabel,
+  kpiValueCell,
   paintStatus,
   placeChart,
+  setupPrint,
   writeHeader,
+  writeHighlights,
+  writeKpiCards,
+  writeNote,
   writeSection,
   writeTable,
+  type Highlight,
+  type KpiCard,
 } from '@/lib/spreadsheet/workbook';
 
 /** Limite de movimentações na planilha (as páginas são buscadas em sequência). */
@@ -43,7 +53,6 @@ const HISTORY_DAYS = 30;
 
 const STATUS_TONE = { NORMAL: 'ok', ATTENTION: 'warn', CRITICAL: 'critical' } as const;
 const STATUS_COLOR = { NORMAL: '#1e7f4f', ATTENTION: '#e08a00', CRITICAL: '#d92d20' } as const;
-const TREND_ARROW = { UP: '▲ subindo', DOWN: '▼ caindo', STABLE: '= estável' } as const;
 
 export interface StockWorkbookData {
   overview: StockOverview;
@@ -75,13 +84,54 @@ export async function fetchStockWorkbookData(): Promise<StockWorkbookData> {
   return { overview, history, movements: movements.items, movementsTotal: movements.total };
 }
 
+const typeNames = (items: StockItemView[]) =>
+  items.map((item) => BLOOD_TYPE_LABELS[item.bloodType]).join(', ');
+
+const bags = (count: number) => `${formatNumber(count)} ${count === 1 ? 'bolsa' : 'bolsas'}`;
+
+/** O que precisa de ação, do mais urgente para o menos urgente. */
+function stockHighlights(items: StockItemView[]): Highlight[] {
+  const byUrgency = (a: StockItemView, b: StockItemView) =>
+    a.quantity / (a.ideal || 1) - b.quantity / (b.ideal || 1);
+  const highlights: Highlight[] = items
+    .filter((item) => item.status === 'CRITICAL')
+    .sort(byUrgency)
+    .map((item) => ({
+      tone: 'critical',
+      title: `${BLOOD_TYPE_LABELS[item.bloodType]} crítico:`,
+      text: `${bags(item.quantity)}, abaixo do mínimo de ${formatNumber(item.minimum)}. Faltam ${formatNumber(item.minimum - item.quantity)} para o mínimo e ${formatNumber(item.ideal - item.quantity)} para o ideal.`,
+    }));
+  const attention = items.filter((item) => item.status === 'ATTENTION').sort(byUrgency);
+  if (attention.length) {
+    highlights.push({
+      tone: 'warn',
+      title: 'Em atenção:',
+      text: `${attention
+        .map(
+          (item) =>
+            `${BLOOD_TYPE_LABELS[item.bloodType]} (faltam ${formatNumber(item.ideal - item.quantity)} para o ideal)`,
+        )
+        .join(', ')}.`,
+    });
+  }
+  if (!highlights.length) {
+    highlights.push({
+      tone: 'ok',
+      title: 'Nenhuma ação necessária:',
+      text: 'todos os tipos estão no nível ideal ou acima.',
+    });
+  }
+  return highlights;
+}
+
 export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workbook> {
   const workbook = await createWorkbook('Banco de Sangue — SangueConecta');
   const { overview, history, movements } = data;
   const generated = `Gerado em ${generatedAtLabel()}`;
 
-  // --- Estoque atual -------------------------------------------------------------
-  const current = addSheet(workbook, 'Estoque atual', [16, 12, 12, 12, 14, 16, 18, 16]);
+  // --- Estoque atual (painel de uma página) ---------------------------------------
+  const current = addSheet(workbook, 'Estoque atual', [16, 11, 11, 11, 13, 15, 18, 18]);
+  setupPrint(current, { orientation: 'portrait', onePage: true });
   let row = writeHeader(workbook, current, {
     title: 'Banco de Sangue: estoque atual',
     details: [
@@ -90,30 +140,46 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
     ],
     span: 8,
   });
-  row = writeSection(current, row, 'Resumo', 8);
-  const summary: Array<[string, number, 'ok' | 'warn' | 'critical' | null]> = [
-    ['Total em estoque (bolsas)', overview.totals.quantity, null],
-    ['Tipos críticos (abaixo do mínimo)', overview.totals.critical, 'critical'],
-    ['Tipos em atenção (entre o mínimo e o ideal)', overview.totals.attention, 'warn'],
-    ['Tipos adequados (a partir do ideal)', overview.totals.normal, 'ok'],
-  ];
-  for (const [label, value, tone] of summary) {
-    current.mergeCells(`A${row}:D${row}`);
-    current.getCell(`A${row}`).value = label;
-    current.getCell(`A${row}`).font = { color: { argb: XLSX_COLORS.muted } };
-    const cell = current.getCell(`E${row}`);
-    cell.value = value;
-    cell.numFmt = FORMATS.integer;
-    cell.font = { bold: true, size: 13 };
-    if (tone) paintStatus(current, row, 5, tone);
-    row++;
-  }
-  row += 1;
-  row = writeSection(current, row, 'Níveis por tipo', 8);
-  const first = row + 1;
   const items = BLOOD_TYPES.map((type) => overview.items.find((i) => i.bloodType === type)).filter(
     (item): item is NonNullable<typeof item> => Boolean(item),
   );
+  const withStatus = (status: StockItemView['status']) =>
+    items.filter((item) => item.status === status);
+  row = writeKpiCards(
+    current,
+    row,
+    [
+      {
+        label: 'Bolsas em estoque',
+        value: overview.totals.quantity,
+        numFmt: FORMATS.integer,
+        detail: `em ${items.length} tipos sanguíneos`,
+      },
+      {
+        label: 'Tipos críticos',
+        value: overview.totals.critical,
+        detail: typeNames(withStatus('CRITICAL')) || 'nenhum abaixo do mínimo',
+        tone: overview.totals.critical ? 'critical' : 'ok',
+      },
+      {
+        label: 'Em atenção',
+        value: overview.totals.attention,
+        detail: typeNames(withStatus('ATTENTION')) || 'nenhum abaixo do ideal',
+        tone: overview.totals.attention ? 'warn' : 'ok',
+      },
+      {
+        label: 'Adequados',
+        value: overview.totals.normal,
+        detail: typeNames(withStatus('NORMAL')) || 'nenhum no nível ideal',
+        tone: 'ok',
+      },
+    ],
+    8,
+  );
+  row = writeSection(current, row, 'Ação necessária', 8);
+  row = writeHighlights(current, row, stockHighlights(items), 8);
+  row = writeSection(current, row, 'Níveis por tipo', 8);
+  const first = row + 1;
   const table = writeTable(
     current,
     row,
@@ -128,9 +194,9 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
       { name: 'Mínimo', numFmt: FORMATS.integer },
       { name: 'Ideal', numFmt: FORMATS.integer },
       { name: '% do ideal', numFmt: FORMATS.percent },
-      { name: 'Situação' },
-      { name: 'Variação 7 dias', numFmt: FORMATS.signed },
-      { name: 'Tendência' },
+      { name: 'Situação', align: 'center' },
+      { name: 'Faltam para o ideal', numFmt: FORMATS.integerDash },
+      { name: 'Variação em 7 dias', numFmt: FORMATS.signedArrow },
     ],
     items.map((item, i) => [
       BLOOD_TYPE_LABELS[item.bloodType],
@@ -142,15 +208,18 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
         result: item.ideal ? item.quantity / item.ideal : 0,
       },
       STOCK_STATUS_LABELS[item.status],
+      {
+        formula: `MAX(0,D${first + i}-B${first + i})`,
+        result: Math.max(0, item.ideal - item.quantity),
+      },
       item.trend.delta7d,
-      TREND_ARROW[item.trend.direction],
     ]),
   );
   items.forEach((item, i) => {
     const r = table.firstRow + i;
     paintStatus(current, r, 6, STATUS_TONE[item.status]);
-    const delta = current.getCell(r, 7);
-    delta.font = {
+    current.getCell(r, 1).font = font({ bold: true });
+    current.getCell(r, 8).font = font({
       color: {
         argb:
           item.trend.delta7d > 0
@@ -159,19 +228,24 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
               ? XLSX_COLORS.criticalText
               : XLSX_COLORS.muted,
       },
-    };
+    });
   });
   if (items.length) {
     addDataBars(current, `B${table.firstRow}:B${table.lastRow}`, BAR_COLORS.azul);
     addTrafficLightScale(current, `E${table.firstRow}:E${table.lastRow}`);
   }
-  current.views = [{ state: 'frozen', ySplit: table.headerRow, showGridLines: false }];
-  row = table.nextRow;
+  row = writeNote(
+    current,
+    table.nextRow - 1,
+    'Crítico: abaixo do mínimo. Atenção: entre o mínimo e o ideal. Adequado: a partir do ideal.',
+    8,
+  );
   placeChart(
     workbook,
     current,
     barChartPng({
       title: 'Bolsas por tipo, com mínimo e ideal',
+      subtitle: 'Cor da barra: vermelho crítico, laranja atenção, verde adequado',
       labels: items.map((i) => BLOOD_TYPE_LABELS[i.bloodType]),
       values: items.map((i) => i.quantity),
       colors: items.map((i) => STATUS_COLOR[i.status]),
@@ -179,42 +253,90 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
         { label: 'Mínimo', color: '#1f2328', values: items.map((i) => i.minimum), dashed: true },
         { label: 'Ideal', color: '#215f8f', values: items.map((i) => i.ideal) },
       ],
+      width: 820,
+      height: 330,
     }),
-    { col: 1, row },
-    { width: 720, height: 340 },
+    { col: 1, row: row + 1 },
+    { width: 820, height: 330 },
   );
 
   // --- Histórico -----------------------------------------------------------------
+  // Tabela à esquerda (colunas 1 a 10) e gráfico à direita (a partir da coluna 12).
+  const tableSpan = BLOOD_TYPES.length + 2;
+  const chartCol = tableSpan + 2;
   const historySheet = addSheet(
     workbook,
     `Histórico ${history.days} dias`,
-    [14, ...BLOOD_TYPES.map(() => 9), 12],
+    [14, ...BLOOD_TYPES.map(() => 9), 12, 3, ...Array.from({ length: 8 }, () => 11)],
     XLSX_COLORS.azul,
   );
-  const span = BLOOD_TYPES.length + 2;
+  setupPrint(historySheet, { onePage: true });
+  const points = history.points;
   row = writeHeader(workbook, historySheet, {
     title: `Saldo no fim de cada dia (últimos ${history.days} dias)`,
     details: [
-      `De ${formatDate(history.points[0]?.date ?? '')} a ${formatDate(history.points.at(-1)?.date ?? '')}`,
+      `De ${formatDate(points[0]?.date ?? '')} a ${formatDate(points.at(-1)?.date ?? '')}`,
       generated,
     ],
-    span,
+    span: chartCol + 7,
   });
+  const lastPoint = points.at(-1);
+  if (lastPoint) {
+    const firstPoint = points[0];
+    const lowest = points.reduce((a, b) => (b.total < a.total ? b : a));
+    const highest = points.reduce((a, b) => (b.total > a.total ? b : a));
+    const change = lastPoint.total - firstPoint.total;
+    const cards: KpiCard[] = [
+      {
+        label: 'Saldo hoje',
+        value: lastPoint.total,
+        numFmt: FORMATS.integer,
+        detail: `em ${formatDate(lastPoint.date)}`,
+      },
+      {
+        label: 'Início do período',
+        value: firstPoint.total,
+        numFmt: FORMATS.integer,
+        detail: `em ${formatDate(firstPoint.date)}`,
+      },
+      {
+        label: 'Variação',
+        value: change,
+        numFmt: FORMATS.signed,
+        detail: firstPoint.total
+          ? `${formatNumber((change / firstPoint.total) * 100, { maximumFractionDigits: 1, signDisplay: 'exceptZero' })}% no período`
+          : 'no período',
+        tone: change > 0 ? 'ok' : change < 0 ? 'critical' : undefined,
+      },
+      {
+        label: 'Menor saldo',
+        value: lowest.total,
+        numFmt: FORMATS.integer,
+        detail: `em ${formatDate(lowest.date)}`,
+      },
+      {
+        label: 'Maior saldo',
+        value: highest.total,
+        numFmt: FORMATS.integer,
+        detail: `em ${formatDate(highest.date)}`,
+      },
+    ];
+    row = writeKpiCards(historySheet, row, cards, tableSpan, 5);
+  }
   const historyTable = writeTable(
     historySheet,
     row,
     'Historico',
     [
-      { name: 'Data', numFmt: FORMATS.date },
+      { name: 'Data', numFmt: FORMATS.date, align: 'left' },
       ...BLOOD_TYPES.map((t) => ({ name: BLOOD_TYPE_LABELS[t], numFmt: FORMATS.integer })),
       { name: 'Total', numFmt: FORMATS.integer },
     ],
-    history.points.map((p) => [
-      excelDate(p.date),
-      ...BLOOD_TYPES.map((t) => p.values[t] ?? 0),
-      p.total,
-    ]),
+    points.map((p) => [excelDate(p.date), ...BLOOD_TYPES.map((t) => p.values[t] ?? 0), p.total]),
   );
+  for (let r = historyTable.firstRow; r <= historyTable.lastRow && points.length; r++) {
+    historySheet.getCell(r, tableSpan).font = font({ bold: true });
+  }
   historySheet.views = [
     { state: 'frozen', ySplit: historyTable.headerRow, xSplit: 1, showGridLines: false },
   ];
@@ -223,18 +345,20 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
     historySheet,
     lineChartPng({
       title: 'Total de bolsas em estoque',
-      labels: history.points.map((p) => formatDate(p.date).slice(0, 5)),
-      series: [{ name: 'Total', color: '#215f8f', values: history.points.map((p) => p.total) }],
+      labels: points.map((p) => formatDate(p.date).slice(0, 5)),
+      series: [{ name: 'Total', color: '#215f8f', values: points.map((p) => p.total) }],
+      width: 640,
+      height: 320,
     }),
-    { col: 1, row: historyTable.nextRow },
-    { width: 720, height: 320 },
+    { col: chartCol, row: historyTable.headerRow },
+    { width: 640, height: 320 },
   );
 
   // --- Movimentações --------------------------------------------------------------
   const movementsSheet = addSheet(
     workbook,
     'Movimentações',
-    [18, 14, 12, 12, 34, 14, 26, 36],
+    [18, 14, 13, 11, 11, 32, 13, 26, 40],
     XLSX_COLORS.marca,
   );
   const note =
@@ -244,59 +368,75 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
   row = writeHeader(workbook, movementsSheet, {
     title: 'Movimentações do estoque',
     details: [...note, generated],
-    span: 8,
+    span: 9,
   });
   const inTotal = movements.filter((m) => m.type === 'IN').reduce((sum, m) => sum + m.quantity, 0);
   const outTotal = movements
     .filter((m) => m.type === 'OUT')
     .reduce((sum, m) => sum + m.quantity, 0);
-  const tableHeader = row + 5;
+  // Cartões (4 linhas) e uma linha de observação antes da tabela.
+  const cardsRow = row;
+  const tableHeader = cardsRow + 5;
   const firstMovement = tableHeader + 1;
   const lastMovement = tableHeader + Math.max(movements.length, 1);
-  row = writeSection(movementsSheet, row, 'Totais (consideram as linhas listadas abaixo)', 8);
-  const totals: Array<[string, { formula: string; result: number }, string]> = [
+  // SUBTOTAL ignora as linhas escondidas: os cartões acompanham o filtro da tabela.
+  const subtotal = (fn: 103 | 109, column: string, result: number) =>
+    movements.length
+      ? {
+          formula: `SUBTOTAL(${fn},${column}${firstMovement}:${column}${lastMovement})`,
+          result,
+        }
+      : result;
+  writeKpiCards(
+    movementsSheet,
+    cardsRow,
     [
-      'Entradas (bolsas)',
       {
-        formula: `SUMIFS(D${firstMovement}:D${lastMovement},C${firstMovement}:C${lastMovement},"Entrada")`,
-        result: inTotal,
+        label: 'Entradas (bolsas)',
+        value: subtotal(109, 'D', inTotal),
+        numFmt: FORMATS.integer,
+        tone: 'ok',
       },
-      XLSX_COLORS.okText,
-    ],
-    [
-      'Saídas (bolsas)',
       {
-        formula: `SUMIFS(D${firstMovement}:D${lastMovement},C${firstMovement}:C${lastMovement},"Saída")`,
-        result: outTotal,
+        label: 'Saídas (bolsas)',
+        value: subtotal(109, 'E', outTotal),
+        numFmt: FORMATS.integer,
+        tone: 'critical',
       },
-      XLSX_COLORS.criticalText,
+      {
+        label: 'Saldo das movimentações',
+        value: {
+          formula: `${kpiValueCell(cardsRow, 0, 9)}-${kpiValueCell(cardsRow, 1, 9)}`,
+          result: inTotal - outTotal,
+        },
+        numFmt: FORMATS.signed,
+      },
+      {
+        label: 'Movimentações',
+        value: subtotal(103, 'A', movements.length),
+        numFmt: FORMATS.integer,
+      },
     ],
-    [
-      'Saldo das movimentações',
-      { formula: `B${row}-B${row + 1}`, result: inTotal - outTotal },
-      XLSX_COLORS.ink,
-    ],
-  ];
-  for (const [label, value, color] of totals) {
-    movementsSheet.getCell(`A${row}`).value = label;
-    movementsSheet.getCell(`A${row}`).font = { color: { argb: XLSX_COLORS.muted } };
-    const cell = movementsSheet.getCell(`B${row}`);
-    cell.value = value;
-    cell.numFmt = label.startsWith('Saldo') ? FORMATS.signed : FORMATS.integer;
-    cell.font = { bold: true, color: { argb: color } };
-    row++;
-  }
+    9,
+  );
+  writeNote(
+    movementsSheet,
+    tableHeader - 1,
+    'Filtre a tabela pelo cabeçalho (tipo sanguíneo, movimento, motivo…): os totais acima acompanham o filtro.',
+    9,
+  );
   const movementsTable = writeTable(
     movementsSheet,
     tableHeader,
     'Movimentacoes',
     [
-      { name: 'Data e hora', numFmt: FORMATS.dateTime },
-      { name: 'Tipo sanguíneo' },
+      { name: 'Data e hora', numFmt: FORMATS.dateTime, align: 'left' },
+      { name: 'Tipo sanguíneo', align: 'center' },
       { name: 'Movimento' },
-      { name: 'Quantidade', numFmt: FORMATS.integer },
+      { name: 'Entrada', numFmt: FORMATS.integer, align: 'center' },
+      { name: 'Saída', numFmt: FORMATS.integer, align: 'center' },
       { name: 'Motivo' },
-      { name: 'Saldo depois', numFmt: FORMATS.integer },
+      { name: 'Saldo depois', numFmt: FORMATS.integer, align: 'center' },
       { name: 'Responsável' },
       { name: 'Observações' },
     ],
@@ -304,7 +444,8 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
       excelDateTime(m.occurredAt),
       BLOOD_TYPE_LABELS[m.bloodType],
       MOVEMENT_TYPE_LABELS[m.type],
-      m.quantity,
+      m.type === 'IN' ? m.quantity : null,
+      m.type === 'OUT' ? m.quantity : null,
       MOVEMENTS_REASON_LABEL[m.reason] ?? m.reason,
       m.balanceAfter,
       m.responsibleName,
@@ -312,14 +453,15 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
     ]),
   );
   movements.forEach((m, i) => {
-    movementsSheet.getCell(movementsTable.firstRow + i, 3).font = {
-      bold: true,
-      color: { argb: m.type === 'IN' ? XLSX_COLORS.okText : XLSX_COLORS.criticalText },
-    };
+    const color = { argb: m.type === 'IN' ? XLSX_COLORS.okText : XLSX_COLORS.criticalText };
+    const r = movementsTable.firstRow + i;
+    movementsSheet.getCell(r, 3).font = font({ bold: true, color });
+    movementsSheet.getCell(r, m.type === 'IN' ? 4 : 5).font = font({ bold: true, color });
   });
   movementsSheet.views = [
     { state: 'frozen', ySplit: movementsTable.headerRow, showGridLines: false },
   ];
+  setupPrint(movementsSheet, { repeatRow: movementsTable.headerRow });
 
   return workbook;
 }
