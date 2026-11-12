@@ -1,0 +1,95 @@
+name: Demonstração no GitHub Pages
+
+# Constrói a demonstração (arquivo único, sem servidor) e publica em
+# https://labdogui.github.io/Reposit-rioFMU/sangueconecta/ a cada mudança que
+# entra no main. Em pull requests, só constrói e guarda o resultado como
+# artefato, para quem revisa poder abrir antes do merge.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - 'backend/libs/contracts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/demo-pages.yml'
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - 'backend/libs/contracts/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/demo-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demo:
+    name: Construir e publicar a demonstração
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      # Para gravar no ramo gh-pages (a publicação só acontece no main).
+      contents: write
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Instalar o Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Construir a demonstração (arquivo único)
+        run: npm run build:demo -w @pulso/frontend
+
+      - name: Montar a pasta publicada
+        # O demo.html vira index.html; o service worker, o manifest e os ícones
+        # (PWA) vão junto, para a demonstração ser instalável.
+        run: |
+          mkdir site
+          cp frontend/dist-demo/demo.html site/index.html
+          cp frontend/dist-demo/sw.js frontend/dist-demo/manifest.webmanifest frontend/dist-demo/favicon.svg site/
+          cp -r frontend/dist-demo/icons site/icons
+
+      - name: Guardar a demonstração construída
+        uses: actions/upload-artifact@v4
+        with:
+          name: demonstracao
+          path: site
+          retention-days: 14
+
+      - name: Baixar o ramo gh-pages
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: pages
+
+      - name: Publicar em gh-pages/sangueconecta
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        # Só a pasta sangueconecta é trocada; o resto do gh-pages fica como está.
+        run: |
+          rm -rf pages/sangueconecta
+          cp -r site pages/sangueconecta
+          cd pages
+          git add -A sangueconecta
+          if git diff --cached --quiet; then
+            echo "A demonstração publicada já está atualizada."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Demonstração atualizada (main ${GITHUB_SHA::7})"
+          git push

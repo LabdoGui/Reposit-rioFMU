@@ -4,7 +4,7 @@ import { HeroArt } from './HeroArt';
 
 export function HeroSection() {
   return (
-    <section aria-labelledby="hero-title">
+    <section aria-labelledby="hero-title" className="overflow-x-clip">
       <div className="mx-auto grid max-w-page items-center gap-12 px-4 py-14 sm:px-6 md:grid-cols-[1.15fr_0.85fr] lg:py-24">
         <div>
           <Badge tone="info" icon={<HeartPulse aria-hidden="true" className="size-3.5" />}>
