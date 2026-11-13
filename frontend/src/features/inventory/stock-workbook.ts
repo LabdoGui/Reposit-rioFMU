@@ -32,19 +32,21 @@ import {
   excelDate,
   excelDateTime,
   font,
+  freezeHeader,
   generatedAtLabel,
-  kpiValueCell,
   paintStatus,
   placeChart,
   setupPrint,
+  statValueCell,
+  writeCompactHeader,
   writeHeader,
   writeHighlights,
   writeKpiCards,
   writeNote,
   writeSection,
+  writeStatStrip,
   writeTable,
   type Highlight,
-  type KpiCard,
 } from '@/lib/spreadsheet/workbook';
 
 /** Limite de movimentações na planilha (as páginas são buscadas em sequência). */
@@ -262,6 +264,8 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
 
   // --- Histórico -----------------------------------------------------------------
   // Tabela à esquerda (colunas 1 a 10) e gráfico à direita (a partir da coluna 12).
+  // Acima da tabela só duas linhas baixas (título e totais): elas ficam congeladas
+  // junto com o cabeçalho, e a tabela precisa de espaço para rolar em telas pequenas.
   const tableSpan = BLOOD_TYPES.length + 2;
   const chartCol = tableSpan + 2;
   const historySheet = addSheet(
@@ -272,9 +276,9 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
   );
   setupPrint(historySheet, { onePage: true });
   const points = history.points;
-  row = writeHeader(workbook, historySheet, {
+  row = writeCompactHeader(workbook, historySheet, {
     title: `Saldo no fim de cada dia (últimos ${history.days} dias)`,
-    details: [
+    context: [
       `De ${formatDate(points[0]?.date ?? '')} a ${formatDate(points.at(-1)?.date ?? '')}`,
       generated,
     ],
@@ -282,46 +286,25 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
   });
   const lastPoint = points.at(-1);
   if (lastPoint) {
-    const firstPoint = points[0];
-    const lowest = points.reduce((a, b) => (b.total < a.total ? b : a));
-    const highest = points.reduce((a, b) => (b.total > a.total ? b : a));
-    const change = lastPoint.total - firstPoint.total;
-    const cards: KpiCard[] = [
-      {
-        label: 'Saldo hoje',
-        value: lastPoint.total,
-        numFmt: FORMATS.integer,
-        detail: `em ${formatDate(lastPoint.date)}`,
-      },
-      {
-        label: 'Início do período',
-        value: firstPoint.total,
-        numFmt: FORMATS.integer,
-        detail: `em ${formatDate(firstPoint.date)}`,
-      },
-      {
-        label: 'Variação',
-        value: change,
-        numFmt: FORMATS.signed,
-        detail: firstPoint.total
-          ? `${formatNumber((change / firstPoint.total) * 100, { maximumFractionDigits: 1, signDisplay: 'exceptZero' })}% no período`
-          : 'no período',
-        tone: change > 0 ? 'ok' : change < 0 ? 'critical' : undefined,
-      },
-      {
-        label: 'Menor saldo',
-        value: lowest.total,
-        numFmt: FORMATS.integer,
-        detail: `em ${formatDate(lowest.date)}`,
-      },
-      {
-        label: 'Maior saldo',
-        value: highest.total,
-        numFmt: FORMATS.integer,
-        detail: `em ${formatDate(highest.date)}`,
-      },
-    ];
-    row = writeKpiCards(historySheet, row, cards, tableSpan, 5);
+    const change = lastPoint.total - points[0].total;
+    const totals = points.map((p) => p.total);
+    row = writeStatStrip(
+      historySheet,
+      row,
+      [
+        { label: 'Hoje', value: lastPoint.total, numFmt: FORMATS.integer },
+        { label: 'Início', value: points[0].total, numFmt: FORMATS.integer },
+        {
+          label: 'Variação',
+          value: change,
+          numFmt: FORMATS.signed,
+          tone: change > 0 ? 'ok' : change < 0 ? 'critical' : undefined,
+        },
+        { label: 'Menor', value: Math.min(...totals), numFmt: FORMATS.integer },
+        { label: 'Maior', value: Math.max(...totals), numFmt: FORMATS.integer },
+      ],
+      tableSpan,
+    );
   }
   const historyTable = writeTable(
     historySheet,
@@ -337,9 +320,8 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
   for (let r = historyTable.firstRow; r <= historyTable.lastRow && points.length; r++) {
     historySheet.getCell(r, tableSpan).font = font({ bold: true });
   }
-  historySheet.views = [
-    { state: 'frozen', ySplit: historyTable.headerRow, xSplit: 1, showGridLines: false },
-  ];
+  freezeHeader(historySheet, historyTable.headerRow, true);
+  // O gráfico começa na primeira linha de dados: fica inteiro na parte que rola.
   placeChart(
     workbook,
     historySheet,
@@ -350,7 +332,7 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
       width: 640,
       height: 320,
     }),
-    { col: chartCol, row: historyTable.headerRow },
+    { col: chartCol, row: historyTable.firstRow },
     { width: 640, height: 320 },
   );
 
@@ -361,25 +343,26 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
     [18, 14, 13, 11, 11, 32, 13, 26, 40],
     XLSX_COLORS.marca,
   );
-  const note =
-    data.movementsTotal > movements.length
-      ? [`Mostrando as ${movements.length} movimentações mais recentes de ${data.movementsTotal}.`]
-      : [];
-  row = writeHeader(workbook, movementsSheet, {
+  row = writeCompactHeader(workbook, movementsSheet, {
     title: 'Movimentações do estoque',
-    details: [...note, generated],
+    context: [
+      data.movementsTotal > movements.length
+        ? `As ${formatNumber(movements.length)} mais recentes de ${formatNumber(data.movementsTotal)}`
+        : `${formatNumber(movements.length)} movimentações`,
+      generated,
+    ],
     span: 9,
   });
   const inTotal = movements.filter((m) => m.type === 'IN').reduce((sum, m) => sum + m.quantity, 0);
   const outTotal = movements
     .filter((m) => m.type === 'OUT')
     .reduce((sum, m) => sum + m.quantity, 0);
-  // Cartões (4 linhas) e uma linha de observação antes da tabela.
-  const cardsRow = row;
-  const tableHeader = cardsRow + 5;
+  // Faixa de totais (uma linha) e, logo abaixo, a tabela.
+  const totalsRow = row;
+  const tableHeader = totalsRow + 1;
   const firstMovement = tableHeader + 1;
   const lastMovement = tableHeader + Math.max(movements.length, 1);
-  // SUBTOTAL ignora as linhas escondidas: os cartões acompanham o filtro da tabela.
+  // SUBTOTAL ignora as linhas escondidas: os totais acompanham o filtro da tabela.
   const subtotal = (fn: 103 | 109, column: string, result: number) =>
     movements.length
       ? {
@@ -387,26 +370,26 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
           result,
         }
       : result;
-  writeKpiCards(
+  writeStatStrip(
     movementsSheet,
-    cardsRow,
+    totalsRow,
     [
       {
-        label: 'Entradas (bolsas)',
+        label: 'Entradas',
         value: subtotal(109, 'D', inTotal),
         numFmt: FORMATS.integer,
         tone: 'ok',
       },
       {
-        label: 'Saídas (bolsas)',
+        label: 'Saídas',
         value: subtotal(109, 'E', outTotal),
         numFmt: FORMATS.integer,
         tone: 'critical',
       },
       {
-        label: 'Saldo das movimentações',
+        label: 'Saldo',
         value: {
-          formula: `${kpiValueCell(cardsRow, 0, 9)}-${kpiValueCell(cardsRow, 1, 9)}`,
+          formula: `${statValueCell(totalsRow, 0)}-${statValueCell(totalsRow, 1)}`,
           result: inTotal - outTotal,
         },
         numFmt: FORMATS.signed,
@@ -418,12 +401,7 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
       },
     ],
     9,
-  );
-  writeNote(
-    movementsSheet,
-    tableHeader - 1,
-    'Filtre a tabela pelo cabeçalho (tipo sanguíneo, movimento, motivo…): os totais acima acompanham o filtro.',
-    9,
+    'Totais em bolsas. Acompanham o filtro da tabela.',
   );
   const movementsTable = writeTable(
     movementsSheet,
@@ -458,9 +436,7 @@ export async function buildStockWorkbook(data: StockWorkbookData): Promise<Workb
     movementsSheet.getCell(r, 3).font = font({ bold: true, color });
     movementsSheet.getCell(r, m.type === 'IN' ? 4 : 5).font = font({ bold: true, color });
   });
-  movementsSheet.views = [
-    { state: 'frozen', ySplit: movementsTable.headerRow, showGridLines: false },
-  ];
+  if (movements.length) freezeHeader(movementsSheet, movementsTable.headerRow);
   setupPrint(movementsSheet, { repeatRow: movementsTable.headerRow });
 
   return workbook;
