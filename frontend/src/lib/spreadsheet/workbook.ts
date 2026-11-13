@@ -230,6 +230,123 @@ export function writeHeader(workbook: Workbook, sheet: Worksheet, options: Heade
   return row + 2;
 }
 
+interface CompactHeaderOptions {
+  title: string;
+  /** Contexto em uma linha (período, filtros, data de geração). */
+  context: string[];
+  /** Quantas colunas o cabeçalho ocupa. */
+  span: number;
+}
+
+/**
+ * Cabeçalho de uma linha só, para as abas de tabela longa. Nessas abas, tudo o
+ * que fica acima da tabela é congelado junto com o cabeçalho dela, então precisa
+ * ser baixo: com muitas linhas congeladas, numa janela pequena (ou no celular)
+ * não sobra espaço para a tabela rolar. Devolve a próxima linha livre.
+ */
+export function writeCompactHeader(
+  workbook: Workbook,
+  sheet: Worksheet,
+  options: CompactHeaderOptions,
+): number {
+  const logo = symbolPng(96, '#ffffff');
+  if (logo) {
+    const imageId = workbook.addImage({ base64: logo, extension: 'png' });
+    sheet.addImage(imageId, { tl: { col: 0.1, row: 0.15 }, ext: { width: 24, height: 33 } });
+  }
+  sheet.getRow(1).height = 36;
+  sheet.mergeCells(`A1:${columnLetter(options.span)}1`);
+  const cell = sheet.getCell('A1');
+  const context = [...options.context, 'Dados fictícios (demonstração acadêmica)'].join(' · ');
+  cell.value = {
+    richText: [
+      {
+        text: options.title,
+        font: font({ size: 13, bold: true, color: { argb: XLSX_COLORS.white } }),
+      },
+      { text: `\n${context}`, font: font({ size: 9, color: { argb: XLSX_COLORS.petroleoClaro } }) },
+    ],
+  };
+  cell.fill = solid(XLSX_COLORS.petroleo);
+  // wrapText faz o Excel respeitar a quebra entre o título e o contexto.
+  cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true, indent: logo ? 5 : 1 };
+  return 2;
+}
+
+export interface Stat {
+  label: string;
+  value: CellValue;
+  numFmt?: string;
+  tone?: Tone;
+}
+
+/** Endereço da célula do valor de um item da faixa de totais (para fórmulas entre eles). */
+export function statValueCell(row: number, index: number): string {
+  return `${columnLetter(index * 2 + 2)}${row}`;
+}
+
+/**
+ * Faixa de totais numa linha só: cada item ocupa duas células (rótulo e valor).
+ * Baixa de propósito, para ficar congelada junto com o cabeçalho da tabela sem
+ * roubar espaço da rolagem. Devolve a próxima linha livre.
+ */
+export function writeStatStrip(
+  sheet: Worksheet,
+  row: number,
+  stats: Stat[],
+  span: number,
+  hint?: string,
+): number {
+  sheet.getRow(row).height = 22;
+  for (let col = 1; col <= span; col++) {
+    const cell = sheet.getCell(row, col);
+    cell.fill = solid(XLSX_COLORS.card);
+    cell.border = { bottom: { style: 'thin', color: { argb: XLSX_COLORS.line } } };
+  }
+  stats.forEach((stat, index) => {
+    const label = sheet.getCell(row, index * 2 + 1);
+    label.value = stat.label;
+    label.font = font({ size: 9, bold: true, color: { argb: XLSX_COLORS.muted } });
+    label.alignment = { horizontal: 'right', vertical: 'middle' };
+    const value = sheet.getCell(row, index * 2 + 2);
+    value.value = stat.value;
+    value.font = font({
+      size: 12,
+      bold: true,
+      color: { argb: stat.tone ? TONE_TEXT[stat.tone] : XLSX_COLORS.ink },
+    });
+    value.alignment = { horizontal: 'left', vertical: 'middle' };
+    if (stat.numFmt) value.numFmt = stat.numFmt;
+  });
+  const hintCol = stats.length * 2 + 1;
+  if (hint && hintCol <= span) {
+    if (span > hintCol) sheet.mergeCells(row, hintCol, row, span);
+    const cell = sheet.getCell(row, hintCol);
+    cell.value = hint;
+    cell.font = font({ size: 9, italic: true, color: { argb: XLSX_COLORS.muted } });
+    cell.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+  }
+  return row + 1;
+}
+
+/**
+ * Congela a aba até o cabeçalho da tabela (e, se pedido, a primeira coluna) e
+ * deixa o cursor na primeira linha de dados, já na parte que rola.
+ */
+export function freezeHeader(sheet: Worksheet, headerRow: number, firstColumn = false): void {
+  const firstCell = `${firstColumn ? 'B' : 'A'}${headerRow + 1}`;
+  sheet.views = [
+    {
+      state: 'frozen',
+      ySplit: headerRow,
+      xSplit: firstColumn ? 1 : 0,
+      topLeftCell: firstCell,
+      activeCell: firstCell,
+      showGridLines: false,
+    },
+  ];
+}
+
 /** Título de seção, com um fio embaixo. Devolve a próxima linha livre. */
 export function writeSection(sheet: Worksheet, row: number, text: string, span: number): number {
   sheet.mergeCells(`A${row}:${columnLetter(span)}${row}`);
@@ -267,11 +384,6 @@ export interface KpiCard {
 /** Primeira coluna do cartão `index` numa fileira de `perRow` cartões em `span` colunas. */
 function kpiColumn(index: number, span: number, perRow: number): number {
   return Math.floor((index * span) / perRow) + 1;
-}
-
-/** Endereço da célula do número de um cartão (para fórmulas entre cartões). */
-export function kpiValueCell(row: number, index: number, span: number, perRow = 4): string {
-  return `${columnLetter(kpiColumn(index, span, perRow))}${row + 1}`;
 }
 
 /**

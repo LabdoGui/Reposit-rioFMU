@@ -253,7 +253,10 @@ export function lineChartPng(options: LineChartOptions): string | null {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   options.labels.forEach((label, i) => {
-    if (i % every === 0 || i === n - 1) ctx.fillText(label, xAt(i), area.bottom + 8);
+    // O último rótulo sempre aparece; o penúltimo some se ficaria grudado nele.
+    const tooCloseToEnd = i !== n - 1 && n - 1 - i < every / 2;
+    if ((i % every === 0 && !tooCloseToEnd) || i === n - 1)
+      ctx.fillText(label, xAt(i), area.bottom + 8);
   });
 
   for (const series of options.series) {

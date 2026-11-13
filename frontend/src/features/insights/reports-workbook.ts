@@ -33,11 +33,13 @@ import {
   excelDate,
   excelDateTime,
   font,
+  freezeHeader,
   generatedAtLabel,
   paintStatus,
   placeChart,
   setupPrint,
   shareFormula,
+  writeCompactHeader,
   writeHeader,
   writeHighlights,
   writeKpiCards,
@@ -412,9 +414,10 @@ export async function buildReportsWorkbook(input: ReportsWorkbookInput): Promise
           `Mostrando ${input.donations.length} de ${input.donationsTotal} doações (limite da exportação).`,
         ]
       : [];
-  row = writeHeader(workbook, donationsSheet, {
+  // Uma linha só acima da tabela: ela fica congelada junto com o cabeçalho.
+  row = writeCompactHeader(workbook, donationsSheet, {
     title: 'Doações',
-    details: details(input, [`Situação: ${input.labels.status}`, ...truncatedNote]),
+    context: details(input, [`Situação: ${input.labels.status}`, ...truncatedNote]),
     span: 7,
   });
   const totalVolume = input.donations.reduce((sum, d) => sum + d.volumeMl, 0);
@@ -454,9 +457,7 @@ export async function buildReportsWorkbook(input: ReportsWorkbookInput): Promise
       });
     }
   });
-  donationsSheet.views = [
-    { state: 'frozen', ySplit: donationsTable.headerRow, showGridLines: false },
-  ];
+  if (input.donations.length) freezeHeader(donationsSheet, donationsTable.headerRow);
   setupPrint(donationsSheet, { repeatRow: donationsTable.headerRow });
 
   // --- Por dia --------------------------------------------------------------------
@@ -467,9 +468,9 @@ export async function buildReportsWorkbook(input: ReportsWorkbookInput): Promise
       [14, 18, 16, 16, 3, ...CHART_COLUMNS],
       XLSX_COLORS.azul,
     );
-    row = writeHeader(workbook, dailySheet, {
+    row = writeCompactHeader(workbook, dailySheet, {
       title: 'Movimento por dia',
-      details: details(input),
+      context: details(input),
       span: 5 + CHART_COLUMNS.length,
     });
     const donationsByDay = byDay(clinical?.byDay);
@@ -509,7 +510,7 @@ export async function buildReportsWorkbook(input: ReportsWorkbookInput): Promise
         newDonorsByDay[i],
       ]),
     );
-    dailySheet.views = [{ state: 'frozen', ySplit: table.headerRow, showGridLines: false }];
+    freezeHeader(dailySheet, table.headerRow);
     // Períodos curtos cabem em uma página; nos longos, o cabeçalho se repete em cada página.
     setupPrint(dailySheet, days.length <= 45 ? { onePage: true } : { repeatRow: table.headerRow });
     // O gráfico começa uma linha abaixo do cabeçalho, para não ser repetido junto com ele.
