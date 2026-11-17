@@ -33,7 +33,7 @@ concurrency:
 jobs:
   demo:
     name: Construir e publicar a demonstração
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       # Para gravar no ramo gh-pages (a publicação só acontece no main).
