@@ -26,6 +26,17 @@ const DEMO_ACCOUNTS = [
 ];
 const DEMO_PASSWORD = 'Pulso@2026';
 
+/**
+ * As contas de demonstração só aparecem no desenvolvimento (vite), na
+ * demonstração no navegador (--mode demo) e na imagem Docker de demonstração
+ * (VITE_SHOW_DEMO_ACCOUNTS=true, ligado por DEMO_MODE). Em qualquer outro
+ * build o bloco some e o bundler descarta as contas e a senha.
+ */
+const SHOW_DEMO_ACCOUNTS =
+  import.meta.env.DEV ||
+  import.meta.env.MODE === 'demo' ||
+  import.meta.env.VITE_SHOW_DEMO_ACCOUNTS === 'true';
+
 export function LoginPage() {
   useDocumentTitle('Entrar');
   const navigate = useNavigate();
@@ -100,32 +111,34 @@ export function LoginPage() {
         </Button>
       </form>
 
-      <details className="mt-6 rounded-card border border-line bg-canvas p-4 text-sm">
-        <summary className="cursor-pointer font-semibold text-petroleo-800">
-          Contas de demonstração (dados fictícios)
-        </summary>
-        <p className="mt-2 text-ink-muted">
-          Senha de todas: <code className="font-semibold text-ink">{DEMO_PASSWORD}</code>. Toque
-          para preencher.
-        </p>
-        <ul className="mt-3 grid grid-cols-2 gap-2">
-          {DEMO_ACCOUNTS.map((account) => (
-            <li key={account.email}>
-              <button
-                type="button"
-                className="min-h-11 w-full rounded-control border border-line bg-surface px-3 text-left hover:border-petroleo-300"
-                onClick={() => {
-                  setValue('email', account.email, { shouldValidate: true });
-                  setValue('password', DEMO_PASSWORD, { shouldValidate: true });
-                }}
-              >
-                <span className="block font-semibold text-ink">{account.label}</span>
-                <span className="block truncate text-xs text-ink-muted">{account.email}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </details>
+      {SHOW_DEMO_ACCOUNTS && (
+        <details className="mt-6 rounded-card border border-line bg-canvas p-4 text-sm">
+          <summary className="cursor-pointer font-semibold text-petroleo-800">
+            Contas de demonstração (dados fictícios)
+          </summary>
+          <p className="mt-2 text-ink-muted">
+            Senha de todas: <code className="font-semibold text-ink">{DEMO_PASSWORD}</code>. Toque
+            para preencher.
+          </p>
+          <ul className="mt-3 grid grid-cols-2 gap-2">
+            {DEMO_ACCOUNTS.map((account) => (
+              <li key={account.email}>
+                <button
+                  type="button"
+                  className="min-h-11 w-full rounded-control border border-line bg-surface px-3 text-left hover:border-petroleo-300"
+                  onClick={() => {
+                    setValue('email', account.email, { shouldValidate: true });
+                    setValue('password', DEMO_PASSWORD, { shouldValidate: true });
+                  }}
+                >
+                  <span className="block font-semibold text-ink">{account.label}</span>
+                  <span className="block truncate text-xs text-ink-muted">{account.email}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
     </AuthCard>
   );
 }

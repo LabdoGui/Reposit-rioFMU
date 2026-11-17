@@ -18,6 +18,8 @@ if [ -n "${CODESPACE_NAME:-}" ]; then
 fi
 # Link e QR code de verificação das declarações em PDF apontam para o Codespace.
 export PUBLIC_APP_URL="${PUBLIC_APP_URL:-$url}"
+# Demonstração acadêmica: dados fictícios e segredos públicos padrão (veja .env.demo).
+export DEMO_MODE="${DEMO_MODE:-true}"
 
 echo "▶ SangueConecta: aguardando o Docker do Codespace..."
 for _ in $(seq 1 60); do

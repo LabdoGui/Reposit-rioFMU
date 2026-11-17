@@ -1,10 +1,14 @@
 # SangueConecta — ambiente completo em contêineres.
 #
-#   docker compose up --build        → http://localhost:8080
+#   npm run docker:up                → demonstração em http://localhost:8080
+#                                      (= docker compose --env-file .env.demo up --build)
 #   npm run infra:up                 → só PostgreSQL e RabbitMQ (desenvolvimento local)
 #
-# Todas as variáveis têm valor padrão de desenvolvimento: o arquivo .env é
-# opcional (veja .env.example). Troque os segredos fora do ambiente acadêmico.
+# Os segredos têm valor padrão de desenvolvimento, públicos neste repositório.
+# Eles só são aceitos com DEMO_MODE=true (arquivo .env.demo), que também grava
+# os dados fictícios e as contas de demonstração. Sem DEMO_MODE, os serviços
+# recusam subir com esses valores: crie um .env com segredos próprios
+# (veja .env.example) e rode `docker compose up --build`.
 name: pulso
 
 # ---------------------------------------------------------------------------
@@ -33,6 +37,8 @@ x-backend: &backend
 
 x-backend-env: &backend-env
   NODE_ENV: production
+  # Demonstração acadêmica: aceita os segredos públicos padrão (veja o topo do arquivo).
+  DEMO_MODE: ${DEMO_MODE:-false}
   LOG_LEVEL: ${LOG_LEVEL:-info}
   INTERNAL_API_TOKEN: ${INTERNAL_API_TOKEN:-pulso-dev-internal-token-troque-em-producao}
   JWKS_URL: http://identity:3001/api/v1/.well-known/jwks.json
@@ -50,10 +56,10 @@ x-service: &service
 # por docker/rabbitmq/init-users.sh com permissão só nas próprias filas.
 x-service-env: &service-env
   <<: *backend-env
-  # Migrações aplicadas no boot de cada serviço e dados fictícios de demonstração
-  # gravados quando o banco está vazio (ambiente acadêmico).
+  # Migrações aplicadas no boot de cada serviço. Os dados fictícios de
+  # demonstração (banco vazio) só são gravados por padrão com DEMO_MODE=true.
   RUN_MIGRATIONS: ${RUN_MIGRATIONS:-true}
-  SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+  SEED_DEMO_DATA: ${SEED_DEMO_DATA:-${DEMO_MODE:-false}}
   # Endereços internos para as chamadas /internal entre serviços.
   IDENTITY_URL: http://identity:3001
   SCHEDULING_URL: http://scheduling:3002
@@ -151,7 +157,8 @@ services:
       RABBITMQ_URL: amqp://identity_svc:${RABBITMQ_IDENTITY_PASSWORD:-identity_broker_dev}@rabbitmq:5672
       FIELD_ENCRYPTION_KEY: ${IDENTITY_FIELD_ENCRYPTION_KEY:-cHVsc28tZGV2LWlkZW50aXR5LWtleS0zMmJ5dGVzISE=}
       JWT_KEYS_DIR: /var/lib/pulso/identity-keys
-      # Em produção (HTTPS) use true. Com http na rede local, o navegador recusaria o cookie Secure.
+      # Fora da demonstração é obrigatório "true" (HTTPS): o serviço recusa subir com "false".
+      # Na demonstração por http na rede local, o navegador recusaria o cookie Secure.
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       # Primeiro administrador sem dados de demonstração (veja .env.example).
       BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
@@ -176,7 +183,7 @@ services:
       DATABASE_URL: postgresql://scheduling_app:${SCHEDULING_DB_PASSWORD:-scheduling_dev_password}@postgres:5432/${POSTGRES_DB:-pulso}?schema=scheduling
       RABBITMQ_URL: amqp://scheduling_svc:${RABBITMQ_SCHEDULING_PASSWORD:-scheduling_broker_dev}@rabbitmq:5672
       # Demonstração: check-in de agendamentos futuros, para fazer a jornada completa numa sessão.
-      DEMO_EARLY_CHECK_IN: ${DEMO_EARLY_CHECK_IN:-true}
+      DEMO_EARLY_CHECK_IN: ${DEMO_EARLY_CHECK_IN:-${DEMO_MODE:-false}}
     ports:
       - '127.0.0.1:3002:3002'
 
@@ -302,6 +309,8 @@ services:
       args:
         <<: *node-build-args
         NGINX_IMAGE: ${NGINX_IMAGE:-nginx:1.27-alpine}
+        # Mostra as contas de demonstração na tela de login só na demonstração.
+        VITE_SHOW_DEMO_ACCOUNTS: ${DEMO_MODE:-false}
     restart: unless-stopped
     logging: *logging
     depends_on:

@@ -28,7 +28,7 @@ concurrency:
 jobs:
   devcontainer:
     name: Devcontainer sobe o SangueConecta
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     steps:
       - name: Baixar o código

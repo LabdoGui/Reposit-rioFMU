@@ -100,3 +100,80 @@ describe('loadEnv', () => {
     }
   });
 });
+
+describe('loadEnv em produção (segredos públicos e demonstração)', () => {
+  const PROD_SERVICE = {
+    ...VALID_SERVICE,
+    NODE_ENV: 'production',
+    INTERNAL_API_TOKEN: 'um-token-interno-forte-gerado-por-ambiente',
+    DATABASE_URL: 'postgresql://scheduling_app:S3nh4-Forte@db:5432/pulso?schema=scheduling',
+    RABBITMQ_URL: 'amqp://scheduling_svc:Br0ker-Forte@rabbitmq:5672',
+  };
+
+  it('aceita produção com segredos próprios e sem dados de demonstração', () => {
+    const env = loadEnv(serviceEnvSchema, PROD_SERVICE);
+    expect(env.DEMO_MODE).toBe(false);
+    expect(env.SEED_DEMO_DATA).toBe(false);
+  });
+
+  it('recusa o token interno público do repositório', () => {
+    expect(() =>
+      loadEnv(serviceEnvSchema, {
+        ...PROD_SERVICE,
+        INTERNAL_API_TOKEN: 'pulso-dev-internal-token-troque-em-producao',
+      }),
+    ).toThrow(/^Configuração insegura para produção: INTERNAL_API_TOKEN/);
+  });
+
+  it.each([
+    ['DATABASE_URL', 'postgresql://scheduling_app:scheduling_dev_password@db:5432/pulso'],
+    ['RABBITMQ_URL', 'amqp://scheduling_svc:scheduling_broker_dev@rabbitmq:5672'],
+    ['RABBITMQ_URL', 'amqp://pulso:pulso_dev@rabbitmq:5672'],
+  ])('recusa a senha pública em %s', (key, url) => {
+    expect(() => loadEnv(serviceEnvSchema, { ...PROD_SERVICE, [key]: url })).toThrow(
+      new RegExp(`${key} usa a senha pública`),
+    );
+  });
+
+  it('recusa os dados de demonstração (contas com senha conhecida)', () => {
+    expect(() => loadEnv(serviceEnvSchema, { ...PROD_SERVICE, SEED_DEMO_DATA: 'true' })).toThrow(
+      /SEED_DEMO_DATA=true/,
+    );
+  });
+
+  it('recusa a chave de cifragem pública e o cookie sem Secure', () => {
+    const schema = serviceEnvSchema.extend({
+      FIELD_ENCRYPTION_KEY: z.string(),
+      COOKIE_SECURE: z.enum(['true', 'false']).transform((value) => value === 'true'),
+    });
+    expect(() =>
+      loadEnv(schema, {
+        ...PROD_SERVICE,
+        FIELD_ENCRYPTION_KEY: 'cHVsc28tZGV2LWlkZW50aXR5LWtleS0zMmJ5dGVzISE=',
+        COOKIE_SECURE: 'false',
+      }),
+    ).toThrow(/FIELD_ENCRYPTION_KEY usa o valor público.*COOKIE_SECURE=false/);
+  });
+
+  it('com DEMO_MODE=true aceita os valores públicos (demonstração acadêmica)', () => {
+    const env = loadEnv(serviceEnvSchema, {
+      ...PROD_SERVICE,
+      DEMO_MODE: 'true',
+      SEED_DEMO_DATA: 'true',
+      INTERNAL_API_TOKEN: 'pulso-dev-internal-token-troque-em-producao',
+      RABBITMQ_URL: 'amqp://pulso:pulso_dev@rabbitmq:5672',
+    });
+    expect(env.DEMO_MODE).toBe(true);
+  });
+
+  it('fora de produção não bloqueia os valores de desenvolvimento', () => {
+    expect(() =>
+      loadEnv(serviceEnvSchema, {
+        ...VALID_SERVICE,
+        NODE_ENV: 'development',
+        SEED_DEMO_DATA: 'true',
+        INTERNAL_API_TOKEN: 'pulso-dev-internal-token-troque-em-producao',
+      }),
+    ).not.toThrow();
+  });
+});

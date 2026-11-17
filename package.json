@@ -26,7 +26,7 @@
     "infra:down": "docker compose down",
     "smoke": "node scripts/smoke.mjs",
     "dev:backend": "node scripts/dev-backend.mjs",
-    "docker:up": "docker compose up --build",
+    "docker:up": "docker compose --env-file .env.demo up --build",
     "docker:down": "docker compose down",
     "docker:reset": "docker compose down -v",
     "e2e": "node scripts/e2e-journey.mjs",

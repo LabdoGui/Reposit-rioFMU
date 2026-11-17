@@ -42,6 +42,9 @@ COPY backend/libs/contracts /backend/libs/contracts
 COPY frontend /frontend
 
 FROM deps AS build
+# "true" mostra as contas de demonstração na tela de login (DEMO_MODE no compose).
+ARG VITE_SHOW_DEMO_ACCOUNTS=false
+ENV VITE_SHOW_DEMO_ACCOUNTS=${VITE_SHOW_DEMO_ACCOUNTS}
 RUN --mount=type=bind,from=frontend-src,target=/src \
   cp -R /src/. ./ \
   && npm run build -w @pulso/frontend
