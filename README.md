@@ -325,10 +325,10 @@ O [`manifest.webmanifest`](frontend/public/manifest.webmanifest) descreve o app 
 ```bash
 git clone https://github.com/LabdoGui/Reposit-rioFMU.git sangueconecta
 cd sangueconecta
-docker compose up --build
+npm run docker:up      # = docker compose --env-file .env.demo up --build
 ```
 
-Não é preciso criar o `.env`: todas as variáveis têm valores padrão de desenvolvimento. O primeiro build baixa as dependências e leva alguns minutos; os seguintes usam o cache.
+Não é preciso criar o `.env`: o [`.env.demo`](.env.demo) liga o modo de demonstração (`DEMO_MODE=true`), que aceita os segredos públicos padrão, grava os dados fictícios e mostra as contas de demonstração na tela de login. Sem `DEMO_MODE=true` (por exemplo, `docker compose up` puro), os serviços **recusam subir** com os segredos públicos do repositório: veja [Configuração](#configuração). O primeiro build baixa as dependências e leva alguns minutos; os seguintes usam o cache.
 
 | O quê | Endereço |
 |---|---|
@@ -406,6 +406,8 @@ Outros comandos:
 
 As variáveis estão documentadas no [`.env.example`](.env.example), com os mesmos valores padrão do `docker-compose.yml`. Para mudar algo, copie para `.env` e edite. As marcadas com **[SEGREDO]** precisam ser trocadas fora do ambiente acadêmico.
 
+**Instalação de verdade (sem demonstração).** Com `NODE_ENV=production` (o padrão nos contêineres) e `DEMO_MODE` diferente de `true`, cada processo confere a configuração no boot e **recusa subir** se encontrar o token interno, as chaves AES ou as senhas de banco e broker públicas deste repositório, `SEED_DEMO_DATA=true` (contas `@demo.com` com senha conhecida) ou `COOKIE_SECURE=false`. A mensagem de erro lista o que falta trocar. Nesse modo, o primeiro administrador vem de `BOOTSTRAP_ADMIN_EMAIL`/`BOOTSTRAP_ADMIN_PASSWORD` e a tela de login não mostra as contas de demonstração.
+
 | Variável | Para quê |
 |---|---|
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | Superusuário e banco do PostgreSQL |
@@ -413,8 +415,9 @@ As variáveis estão documentadas no [`.env.example`](.env.example), com os mesm
 | `RABBITMQ_USER`, `RABBITMQ_PASSWORD` | Administrador do broker (painel de gestão e `npm run dlq:replay`) |
 | `RABBITMQ_<SERVIÇO>_PASSWORD` | Senha do usuário `<serviço>_svc` no broker: só o exchange `pulso.events` e as próprias filas, publicando só as próprias routing keys ([`docker/rabbitmq/init-users.sh`](docker/rabbitmq/init-users.sh)) |
 | `IDENTITY_FIELD_ENCRYPTION_KEY`, `CLINICAL_FIELD_ENCRYPTION_KEY` | Chaves AES-256 dos campos cifrados (telefone; respostas e valores de saúde) |
-| `COOKIE_SECURE` | Flag `Secure` do cookie de sessão (`true` em produção com HTTPS) |
-| `RUN_MIGRATIONS`, `SEED_DEMO_DATA` | Migrações no boot e dados fictícios de demonstração |
+| `DEMO_MODE` | `true` = demonstração acadêmica: aceita os segredos públicos e, por padrão, liga `SEED_DEMO_DATA`, `DEMO_EARLY_CHECK_IN` e as contas na tela de login |
+| `COOKIE_SECURE` | Flag `Secure` do cookie de sessão (`true` em produção com HTTPS; obrigatório sem `DEMO_MODE`) |
+| `RUN_MIGRATIONS`, `SEED_DEMO_DATA` | Migrações no boot e dados fictícios de demonstração (padrão: o valor de `DEMO_MODE`) |
 | `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD` | Sem dados de demonstração: primeiro administrador, criado no boot se ainda não houver nenhum |
 | `PUBLIC_APP_URL` | Endereço do app no link e no QR code de verificação das declarações em PDF (no Codespaces, preenchido pelo `start.sh`) |
 | `DEMO_EARLY_CHECK_IN` | Só para demonstração: check-in de agendamentos de dias futuros (jornada completa numa sessão) |
@@ -468,13 +471,13 @@ docker compose exec postgres sh /docker-entrypoint-initdb.d/01-init.sh
 
 **Dados de referência.** Mesmo sem demonstração, o boot cria o que o sistema precisa para funcionar: uma linha de estoque por tipo sanguíneo (zerada, crítica até a primeira entrada), o questionário base da pré-triagem, os campos da triagem, as configurações e o catálogo de conquistas.
 
-**Dados de demonstração.** Com `SEED_DEMO_DATA=true`, cada serviço grava a sua parte de um conjunto **fictício e determinístico** (`backend/libs/common/src/seed/dataset.ts`, mesmos IDs em todos os schemas) quando as suas tabelas estão vazias. As datas são relativas ao dia da subida, então o painel sempre tem histórico recente e a agenda de hoje tem atendimentos. Para gerar tudo de novo: `docker compose down -v && docker compose up -d`.
+**Dados de demonstração.** Com `SEED_DEMO_DATA=true`, cada serviço grava a sua parte de um conjunto **fictício e determinístico** (`backend/libs/common/src/seed/dataset.ts`, mesmos IDs em todos os schemas) quando as suas tabelas estão vazias. As datas são relativas ao dia da subida, então o painel sempre tem histórico recente e a agenda de hoje tem atendimentos. Para gerar tudo de novo: `docker compose down -v && docker compose --env-file .env.demo up -d`.
 
 O modelo de dados está em [docs/16, item 5](docs/16-plano-de-implementacao.md#5-modelo-do-banco-por-schema) e em cada `prisma/schema.prisma`.
 
 ## Contas de demonstração
 
-Todas as contas são **fictícias** e usam a mesma senha: **`Pulso@2026`**. A tela de login tem um atalho que preenche cada uma.
+Todas as contas são **fictícias** e usam a mesma senha: **`Pulso@2026`**. Na demonstração, a tela de login tem um atalho que preenche cada uma (fora do modo de demonstração o atalho não aparece).
 
 | Perfil | E-mail | O que dá para fazer |
 |---|---|---|
@@ -558,7 +561,7 @@ O desenho completo da API está em [docs/09](docs/09-api.md) e [docs/16, item 4]
 - As respostas da pré-triagem são apagadas todo dia depois da validade (fica só o resultado, para as estatísticas); cada pré-triagem guarda a versão das regras com que foi calculada.
 - Lembretes de agendamento só saem para quem mantém o consentimento de comunicações. Colaboradores da recepção não veem o tipo sanguíneo do doador; a equipe só vê o resultado de um atendimento enquanto ele está em aberto.
 - Senhas: tentativas erradas contam por conta de forma atômica (logins simultâneos não furam o bloqueio) e ficam na auditoria, inclusive na troca de senha e na exclusão da conta.
-- Os segredos do `.env.example` e do `docker-compose.yml` são públicos e servem só para desenvolvimento.
+- Os segredos do `.env.example` e do `docker-compose.yml` são públicos e servem só para desenvolvimento: sem `DEMO_MODE=true`, os serviços em produção recusam subir com eles.
 
 ## Documentação do projeto
 

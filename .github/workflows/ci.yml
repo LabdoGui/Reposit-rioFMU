@@ -58,6 +58,8 @@ jobs:
       # produção (300 por minuto no geral, 20 nas rotas de senha).
       RATE_LIMIT_MAX: 5000
       AUTH_RATE_LIMIT_MAX: 200
+      # Demonstração: segredos públicos padrão, dados fictícios e contas de demonstração.
+      DEMO_MODE: 'true'
     steps:
       - name: Baixar o código
         uses: actions/checkout@v4
