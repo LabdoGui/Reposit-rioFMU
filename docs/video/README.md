@@ -1,6 +1,9 @@
 # Vídeo de apresentação do SangueConecta
 
-**Arquivo:** [`sangueconecta-apresentacao.mp4`](sangueconecta-apresentacao.mp4) · 2min30s · 1920×1080 · 30 fps · com trilha sonora
+**Arquivos** (2min30s · 1920×1080 · 30 fps):
+
+- [`sangueconecta-apresentacao-narrado.mp4`](sangueconecta-apresentacao-narrado.mp4): com narração (voz do ElevenLabs) e trilha sonora;
+- [`sangueconecta-apresentacao.mp4`](sangueconecta-apresentacao.mp4): só com a trilha, para quem apresenta narrar ao vivo.
 
 Vídeo animado que apresenta o projeto: o problema, a solução, os três perfis (doador, equipe e administração), as telas reais do app, o reconhecimento dos doadores, a privacidade (LGPD), o app instalável (PWA), a arquitetura, o ODS 3 e a equipe. Termina com a logo e um QR code para a [demonstração](https://labdogui.github.io/Reposit-rioFMU/sangueconecta/).
 
@@ -8,7 +11,9 @@ As telas que aparecem no vídeo são capturas da própria demonstração do Sang
 
 ## Roteiro e narração
 
-O vídeo não tem locução: os textos estão na tela, e quem apresenta pode narrar por cima ou gerar a voz numa ferramenta de voz sintética. Cada fala abaixo cabe no tempo da cena; a versão pronta para colar (com o segundo exato de cada fala) está em [`narracao-elevenlabs.txt`](narracao-elevenlabs.txt).
+Cada fala abaixo cabe no tempo da sua cena. A versão pronta para colar numa ferramenta de voz sintética (com o segundo exato de cada fala) está em [`narracao-elevenlabs.txt`](narracao-elevenlabs.txt).
+
+A versão narrada usa a gravação `assets/narracao-elevenlabs.mp3`, feita no ElevenLabs com essas 19 falas. O script `tools/narrar.py` corta cada fala da gravação, coloca no segundo da cena e abaixa a música enquanto a voz fala. A gravação também leu os horários em voz alta; esses trechos ficam de fora. Para trocar a voz, gere uma gravação nova, ajuste a tabela `CORTES` no script e rode `python3 docs/video/tools/narrar.py`.
 
 | Tempo | Fala |
 |---|---|

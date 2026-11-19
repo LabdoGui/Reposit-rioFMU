@@ -49,7 +49,7 @@ O documento consolidado do trabalho está em **[docs/Projeto_SangueConecta_Docum
 
 ### Vídeo de apresentação
 
-Vídeo animado de 2min30s, com as telas reais do app e trilha sonora, para abrir a apresentação: **[docs/video/sangueconecta-apresentacao.mp4](docs/video/sangueconecta-apresentacao.mp4)**. O roteiro, com sugestão de narração cena a cena, e o jeito de gerar o vídeo de novo estão em [docs/video](docs/video/README.md).
+Vídeo animado de 2min30s, com as telas reais do app, narração e trilha sonora, para abrir a apresentação: **[docs/video/sangueconecta-apresentacao-narrado.mp4](docs/video/sangueconecta-apresentacao-narrado.mp4)** (sem narração: [sangueconecta-apresentacao.mp4](docs/video/sangueconecta-apresentacao.mp4)). O roteiro cena a cena e o jeito de gerar o vídeo de novo estão em [docs/video](docs/video/README.md).
 
 ## Identidade visual
 
