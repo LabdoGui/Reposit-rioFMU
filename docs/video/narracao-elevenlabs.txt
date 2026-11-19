@@ -1,0 +1,25 @@
+NARRAÇÃO DO VÍDEO DO SANGUECONECTA (para ElevenLabs ou outra voz sintética)
+
+Gere um áudio por fala e coloque cada um no tempo indicado (minuto:segundo).
+Cada fala cabe no tempo da cena em velocidade normal.
+Cole no ElevenLabs só o texto, sem o tempo.
+
+00:02.0 | Doar sangue salva vidas. O SangueConecta deixa esse caminho mais simples.
+00:08.0 | Muita gente quer doar, mas desiste no caminho: falta informação, horário e um lembrete para voltar.
+00:14.4 | Em dois mil e vinte e três, só um vírgula seis por cento da população doou sangue.
+00:19.0 | O SangueConecta reúne toda a jornada em um só lugar: cadastro, pré-triagem, agendamento, lembretes, atendimento e o incentivo para voltar.
+00:29.2 | São três perfis: quem doa, a equipe de coleta e a gestão do hemocentro.
+00:37.0 | Na página inicial, qualquer pessoa vê o estoque de sangue por tipo, entende por que doar e como funciona.
+00:46.2 | Na área do doador, o próximo passo está sempre à vista. A pré-triagem tem seis etapas, e o agendamento, só quatro passos.
+00:56.0 | O doador acompanha o histórico, recebe lembretes e gera declarações em PDF, que qualquer pessoa confere pelo QR code.
+01:05.2 | Quem volta a doar ganha pontos, sobe de nível e desbloqueia conquistas. É reconhecimento, nunca dinheiro: doar é um ato voluntário.
+01:14.6 | Na área da equipe: agenda do dia, check-in, triagem e registro da doação. A decisão clínica é sempre do profissional de saúde.
+01:24.6 | Na administração, os indicadores ficam num só painel, com gráficos e filtros.
+01:31.0 | O Banco de Sangue mostra o estoque de cada tipo: adequado, em atenção ou crítico, com planilha em Excel.
+01:38.8 | E ainda: relatórios, agendamentos, unidades, campanhas, gamificação e auditoria.
+01:44.5 | A privacidade vem desde o projeto: coleta mínima, dados de saúde protegidos e tudo auditado, como pede a LGPD.
+01:52.5 | E dá para instalar o SangueConecta como aplicativo, no celular ou no computador.
+01:59.5 | Por dentro, são seis microsserviços, um gateway de entrada, banco de dados e mensageria. E a jornada completa é testada de ponta a ponta.
+02:10.5 | O projeto está alinhado ao ODS três da ONU: Saúde e Bem-Estar.
+02:16.5 | Um Trabalho de Conclusão de Semestre de Sistemas de Informação, no Centro Universitário FMU.
+02:23.5 | SangueConecta: conectando doadores a vidas que precisam de ajuda. Obrigado!

@@ -6,28 +6,31 @@ Vídeo animado que apresenta o projeto: o problema, a solução, os três perfis
 
 As telas que aparecem no vídeo são capturas da própria demonstração do SangueConecta, com os dados fictícios do seed. A trilha é original, sintetizada pelo script `tools/trilha.py` (sem músicas de terceiros).
 
-## Roteiro e sugestão de narração
+## Roteiro e narração
 
-O vídeo não tem locução: os textos estão na tela, e quem apresenta pode narrar por cima. A fala abaixo cabe no tempo de cada cena.
+O vídeo não tem locução: os textos estão na tela, e quem apresenta pode narrar por cima ou gerar a voz numa ferramenta de voz sintética. Cada fala abaixo cabe no tempo da cena; a versão pronta para colar (com o segundo exato de cada fala) está em [`narracao-elevenlabs.txt`](narracao-elevenlabs.txt).
 
-| Tempo | Cena | Sugestão de fala |
-|---|---|---|
-| 00:00 | Abertura: a gota cai e vira a logo | "Este é o SangueConecta: uma plataforma que conecta doadores a vidas que precisam de ajuda." |
-| 00:08 | O problema | "Muita gente quer doar sangue, mas desiste no caminho: a informação está espalhada, é difícil achar a unidade e o horário, e quase ninguém é lembrado de voltar. Em 2023, só 1,6% da população brasileira doou sangue." |
-| 00:19 | A solução: a jornada | "O SangueConecta reúne toda a jornada em um só lugar: da descoberta e do cadastro à pré-triagem, ao agendamento, aos lembretes, ao atendimento e ao incentivo para voltar a doar." |
-| 00:29 | Três perfis | "São três perfis: o doador, a equipe de coleta e a gestão do hemocentro." |
-| 00:37 | Página inicial | "Na página inicial, qualquer pessoa vê a situação do estoque por tipo sanguíneo, entende por que doar e como funciona, e recebe orientações antes de doar." |
-| 00:46 | Área do Doador | "Na área do doador, o próximo passo está sempre à vista. A pré-triagem informativa tem seis etapas, e o agendamento, quatro passos: unidade, data, horário e confirmação." |
-| 00:56 | Histórico, lembretes e comprovantes | "O doador acompanha o histórico, recebe notificações e lembretes e gera declarações em PDF, com QR code e verificação pública." |
-| 01:05 | Reconhecimento | "Quem volta a doar é reconhecido com pontos, níveis e conquistas, nunca com dinheiro, porque a doação é voluntária. Há ainda ranking opcional e horas complementares para estudantes." |
-| 01:14 | Área da Equipe | "A equipe da unidade vê a agenda do dia, faz o check-in do doador e registra a triagem e a doação. A decisão clínica é sempre do profissional de saúde." |
-| 01:24 | Administração | "A administração acompanha os indicadores num só painel, com gráficos e filtros. O Banco de Sangue mostra o estoque de cada tipo sanguíneo, adequado, em atenção ou crítico, e exporta planilhas em Excel. Também há relatórios, agendamentos, unidades e horários, campanhas, gamificação, configurações e auditoria." |
-| 01:44 | Privacidade (LGPD) | "A privacidade vem desde o projeto: coleta mínima, dados de saúde isolados, criptografia, consentimento sob controle e auditoria." |
-| 01:52 | App instalável | "O SangueConecta pode ser instalado como app no celular ou no computador, direto pelo navegador." |
-| 01:59 | Tecnologia | "Por dentro, são seis microsserviços com API REST, um API Gateway, PostgreSQL e RabbitMQ, com React no front-end e NestJS no back-end. A jornada completa é testada de ponta a ponta." |
-| 02:10 | ODS 3 | "O projeto está alinhado ao ODS 3 da ONU, Saúde e Bem-Estar." |
-| 02:16 | Quem fez | "Este é o nosso Trabalho de Conclusão de Semestre em Sistemas de Informação, no Centro Universitário FMU." |
-| 02:23 | Encerramento | "SangueConecta: conectando doadores a vidas que precisam de ajuda. Experimente a demonstração pelo QR code." |
+| Tempo | Fala |
+|---|---|
+| 00:02 | Doar sangue salva vidas. O SangueConecta deixa esse caminho mais simples. |
+| 00:08 | Muita gente quer doar, mas desiste no caminho: falta informação, horário e um lembrete para voltar. |
+| 00:14 | Em dois mil e vinte e três, só um vírgula seis por cento da população doou sangue. |
+| 00:19 | O SangueConecta reúne toda a jornada em um só lugar: cadastro, pré-triagem, agendamento, lembretes, atendimento e o incentivo para voltar. |
+| 00:29 | São três perfis: quem doa, a equipe de coleta e a gestão do hemocentro. |
+| 00:37 | Na página inicial, qualquer pessoa vê o estoque de sangue por tipo, entende por que doar e como funciona. |
+| 00:46 | Na área do doador, o próximo passo está sempre à vista. A pré-triagem tem seis etapas, e o agendamento, só quatro passos. |
+| 00:56 | O doador acompanha o histórico, recebe lembretes e gera declarações em PDF, que qualquer pessoa confere pelo QR code. |
+| 01:05 | Quem volta a doar ganha pontos, sobe de nível e desbloqueia conquistas. É reconhecimento, nunca dinheiro: doar é um ato voluntário. |
+| 01:14 | Na área da equipe: agenda do dia, check-in, triagem e registro da doação. A decisão clínica é sempre do profissional de saúde. |
+| 01:24 | Na administração, os indicadores ficam num só painel, com gráficos e filtros. |
+| 01:31 | O Banco de Sangue mostra o estoque de cada tipo: adequado, em atenção ou crítico, com planilha em Excel. |
+| 01:38 | E ainda: relatórios, agendamentos, unidades, campanhas, gamificação e auditoria. |
+| 01:44 | A privacidade vem desde o projeto: coleta mínima, dados de saúde protegidos e tudo auditado, como pede a LGPD. |
+| 01:52 | E dá para instalar o SangueConecta como aplicativo, no celular ou no computador. |
+| 01:59 | Por dentro, são seis microsserviços, um gateway de entrada, banco de dados e mensageria. E a jornada completa é testada de ponta a ponta. |
+| 02:10 | O projeto está alinhado ao ODS três da ONU: Saúde e Bem-Estar. |
+| 02:16 | Um Trabalho de Conclusão de Semestre de Sistemas de Informação, no Centro Universitário FMU. |
+| 02:23 | SangueConecta: conectando doadores a vidas que precisam de ajuda. Obrigado! |
 
 ## Como o vídeo é feito
 
